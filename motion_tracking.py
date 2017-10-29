@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+import time
+
 import cv2
 import numpy as np
 from scipy import signal
-
 
 def mark_corners(img, corners):
     """Draw red circles on corners in the image"""
@@ -10,11 +11,24 @@ def mark_corners(img, corners):
         x, y = i.ravel()
         cv2.circle(img, (x, y), 5, (0, 0, 255), -1)
 
+def show_detected_edges(gx, gy):
+    # To show the edges detected
+    res = gx + gy
+    res = np.sqrt(res * res)
+    res *= 255 / res.max()
+    res = np.uint8(res)
+    cv2.imshow('res', res)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
+def get_eigmin(W):
+    eig_vals = np.linalg.eigvals(W.reshape(2,2))
+    return np.amin(eig_vals)
+
+"""Detect corners in a frame using Shi-Tomasi's Corner Detection Algorithm
+Returns an array of corners similar to cv2.goodFeaturesToTrack()
+"""    
 def detect_corners_tomasi(frame, max_corners, min_distance=13, window_size=13):
-    """Detect corners in a frame using Shi-Tomasi's Corner Detection Algorithm
-    Returns an array of corners similar to cv2.goodFeaturesToTrack()
-    """
     gkern1d = signal.gaussian(window_size, std=3).reshape(window_size, 1)
     gkern2d = np.outer(gkern1d, gkern1d)
 
@@ -26,15 +40,7 @@ def detect_corners_tomasi(frame, max_corners, min_distance=13, window_size=13):
     # Truncate gx and gy so they are square and have the same shape for element-wise multiplication
     gx = gx[:, 0:ncols-1]
     gy = gy[0:nrows-1, :]
-
-    # To show the edges detected
-    # res = gx + gy
-    # res = np.sqrt(res * res)
-    # res *= 255 / res.max()
-    # res = np.uint8(res)
-    # cv2.imshow('res', res)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    #show_detected_edges(gx, gy)
 
     I_xx = gx * gx
     I_xy = gx * gy
@@ -45,42 +51,53 @@ def detect_corners_tomasi(frame, max_corners, min_distance=13, window_size=13):
     W_yy = signal.convolve2d(I_yy, gkern2d, mode='same')
 
     print('Gonna start getting the eigmins now...')
-    nrows, ncols = W_xx.shape
-    eig_mins = np.zeros(W_xx.shape)
-    for i in range(nrows):
-        for j in range(ncols):
-            W = np.array([[W_xx[i][j], W_xy[i][j]],
-                            [W_xy[i][j], W_yy[i][j]]])
-            eig_mins[i][j] = np.amin(np.linalg.eigvals(W))
-            # if j == 164: # limiting because it's taking too long
-            #     break
+    eig_start = time.time()
+    W = np.stack([W_xx, W_xy, W_xy, W_yy], axis=2)
+    eig_mins = np.apply_along_axis(get_eigmin, 2, W)
+    print('Finished getting the eigmins in ' + str(time.time() - eig_start) + ' seconds')
 
-    print('Finished getting the eigmins...')
     print('Gonna start the mosaicing now...')
-    for i in range(0, nrows, min_distance):
-        for j in range(0, ncols, min_distance):
-            try:
-                window = eig_mins[i:i+min_distance, j:j+min_distance]  # refer to MATLAB->numpy docs for the syntax
-            except Exception:  # out of bound exception. TODO: catch a more specific type of Exception
-                window = eig_mins[i:nrows, j:ncols]  # last window might not be of size min_distance x min_distance
+    mosaic_start = time.time()
+    max_eig_mins = np.zeros(eig_mins.shape)
+    for i in range(0, nrows-1, min_distance):
+        for j in range(0, ncols-1, min_distance):
+            i_end = min(i+min_distance, nrows-1)
+            j_end = min(j+min_distance, ncols-1)
+            
+            # last window might not be of size min_distance x min_distance
+            window = eig_mins[i:i_end, j:j_end] 
             r, c = np.unravel_index(window.argmax(), window.shape)
-            max_eig_min = window[r][c]
-            eig_mins[i:i + min_distance, j:j + min_distance] = np.zeros(window.shape)
-            eig_mins[i+r][j+c] = max_eig_min
-            # if j > 164:  # limiting because it's taking too long
-            #     break
-    print('Finished mosaicing...')
+            max_eig_mins[i+r][j+c] = window[r][c]            
+    print('Finished mosaicing in ' + str(time.time() - mosaic_start) + ' seconds')
 
-    sorted_eig_mins = eig_mins.ravel().copy()
-    sorted_eig_mins.sort()
-    sorted_eig_mins = sorted_eig_mins[::-1]  # reverse so that it's sorted in descending order
-    cutoff_eig_min = sorted_eig_mins[max_corners-1]
-
-    row_idxs, col_idxs = np.nonzero(eig_mins >= cutoff_eig_min)
+    cutoff_eig_min = np.partition(max_eig_mins.flatten(), -max_corners)[-max_corners]
+    
+    row_idxs, col_idxs = np.nonzero(max_eig_mins >= cutoff_eig_min)
     corners = np.vstack((col_idxs, row_idxs)).transpose()
     corners = corners.reshape(corners.size // 2, 1, 2)
-    return corners  # return value is in the form of (col, row) which corresponds to (x, y)
+    
+    # return value is in the form of (col, row) which corresponds to (x, y)
+    return corners  
 
+def to_gray(image):
+    return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+def builtin_lk(old_frame0, new_frame, corners, lk_params):
+    old_gray = to_gray(old_frame)
+    new_gray = to_gray(new_frame)
+
+    mask = np.zeros_like(old_frame)
+    new_corners, st, err = cv2.calcOpticalFlowPyrLK(old_gray, new_gray, corners, None, **lk_params)
+    
+    good_old = corners[st == 1]
+    good_new = new_corners[st == 1]
+    
+    for old, new in zip(good_old, good_new):
+        a, b = new.ravel()
+        c, d = old.ravel()
+        cv2.line(mask, (a, b), (c, d), (0, 255, 0), 2)
+        cv2.circle(new_frame, (a, b), 5, (0, 255, 0), -1)
+    return  cv2.add(new_frame, mask)
 
 if __name__ == '__main__':
     # Parameters setup for various processes
@@ -92,27 +109,17 @@ if __name__ == '__main__':
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
     # 1. Read image
-    old_frame, new_frame = cv2.imread('input1.jpg'), cv2.imread('input4.jpg')
-    gray1, gray2 = cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY), cv2.cvtColor(new_frame, cv2.COLOR_BGR2GRAY)
+    old_frame = cv2.imread('input1.jpg')
+    new_frame = cv2.imread('input4.jpg')
 
     # 2. Detect corners using built-in tracker
-    corners1 = detect_corners_tomasi(gray1, 25)
-    # corners1 = cv2.goodFeaturesToTrack(gray1, **feature_params)  # compare to this built-in Tomasi corner detector
+    corners1 = detect_corners_tomasi(to_gray(old_frame), 25)
+    # compare to this built-in Tomasi corner detector
+    # corners1 = cv2.goodFeaturesToTrack(gray1, **feature_params)
     mark_corners(old_frame, corners1)
 
     # 3. Use built-in optical flow detector (Lucas-Kanade)
-    # mask = np.zeros_like(old_frame)
-    # corners2, st, err = cv2.calcOpticalFlowPyrLK(gray1, gray2, corners1, None, **lk_params)
-    #
-    # good_new = corners2[st == 1]
-    # good_old = corners1[st == 1]
-    #
-    # for new, old in zip(good_new, good_old):
-    #     a, b = new.ravel()
-    #     c, d = old.ravel()
-    #     cv2.line(mask, (a, b), (c, d), (0, 255, 0), 2)
-    #     cv2.circle(new_frame, (a, b), 5, (0, 255, 0), -1)
-    # result = cv2.add(new_frame, mask)
+    # builtin_lk(old_frame0, new_frame, corners, lk_params)
 
     # 4. Show the result
     cv2.namedWindow('Result', cv2.WINDOW_NORMAL)
