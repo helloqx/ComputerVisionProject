@@ -121,7 +121,6 @@ if __name__ == '__main__':
 
     # 2. Detect corners using built-in tracker
     corners1 = detect_corners_tomasi(to_gray(old_frame), 25)
-    print(corners1)
     # compare to this built-in Tomasi corner detector
     # corners1 = cv2.goodFeaturesToTrack(gray1, **feature_params)
     mark_corners(old_frame, corners1)
