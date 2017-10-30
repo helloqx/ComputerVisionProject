@@ -36,12 +36,12 @@ def detect_corners_tomasi(frame, max_corners, min_distance=13, window_size=13):
 
     nrows, ncols = frame.shape
     frame = np.int64(frame)  # cast. Otherwise we'll get overflow
-    gx = frame[1:nrows] - frame[0:nrows-1]
-    gy = frame[:, 1:ncols] - frame[:, 0:ncols-1]
+    gx = frame[1:nrows] - frame[0:nrows - 1]
+    gy = frame[:, 1:ncols] - frame[:, 0:ncols - 1]
 
     # Truncate gx and gy so they are square and have the same shape for element-wise multiplication
-    gx = gx[:, 0:ncols-1]
-    gy = gy[0:nrows-1, :]
+    gx = gx[:, 0:ncols - 1]
+    gy = gy[0:nrows - 1, :]
     # show_detected_edges(gx, gy)
 
     I_xx = gx * gx
@@ -52,15 +52,13 @@ def detect_corners_tomasi(frame, max_corners, min_distance=13, window_size=13):
     W_xy = signal.convolve2d(I_xy, gkern2d, mode='same')
     W_yy = signal.convolve2d(I_yy, gkern2d, mode='same')
 
-    print('Gonna start getting the eigmins now...')
+    print('\tGonna start getting the eigmins now...')
     eig_start = time.time()
-    W = np.stack([W_xx, W_xy, W_xy, W_yy], axis=2)
 
     eig_mins = get_all_eigmin(W_xx, W_xy, W_yy)
-    # eig_mins = np.apply_along_axis(get_eigmin, 2, W)
-    print('Finished getting the eigmins in ' + str(time.time() - eig_start) + ' seconds')
+    print('\tFinished getting the eigmins in ' + str(time.time() - eig_start) + ' seconds')
 
-    print('Gonna start the mosaicing now...')
+    print('\tGonna start the mosaicing now...')
     mosaic_start = time.time()
     max_eig_mins = np.zeros(eig_mins.shape)
     for i in range(0, nrows - 1, min_distance):
@@ -72,7 +70,7 @@ def detect_corners_tomasi(frame, max_corners, min_distance=13, window_size=13):
             window = eig_mins[i:i_end, j:j_end]
             r, c = np.unravel_index(window.argmax(), window.shape)
             max_eig_mins[i + r][j + c] = window[r][c]
-    print('Finished mosaicing in ' + str(time.time() - mosaic_start) + ' seconds')
+    print('\tFinished mosaicing in ' + str(time.time() - mosaic_start) + ' seconds')
 
     cutoff_eig_min = np.partition(max_eig_mins.flatten(), -max_corners)[-max_corners]
 
@@ -93,6 +91,7 @@ def builtin_lk(old_frame0, new_frame, corners, lk_params):
     new_gray = to_gray(new_frame)
 
     mask = np.zeros_like(old_frame)
+
     new_corners, st, err = cv2.calcOpticalFlowPyrLK(old_gray, new_gray, corners, None, **lk_params)
 
     good_old = corners[st == 1]
@@ -107,9 +106,9 @@ def builtin_lk(old_frame0, new_frame, corners, lk_params):
 
 if __name__ == '__main__':
     # Parameters setup for various processes
-    # feature_params = dict(maxCorners=100,
-    #                       qualityLevel=0.1,
-    #                       minDistance=10)
+    feature_params = dict(maxCorners=100,
+                          qualityLevel=0.1,
+                          minDistance=10)
     lk_params = dict(winSize=(15, 15),
                      maxLevel=2,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
@@ -119,19 +118,24 @@ if __name__ == '__main__':
     new_frame = cv2.imread('input4.jpg')
 
     # 2. Detect corners using built-in tracker
-    corners1 = detect_corners_tomasi(to_gray(old_frame), 25)
+    print('Phase 2: Tomasi')
+    phase2_start = time.time()
+
+    corners1 = detect_corners_tomasi(to_gray(old_frame), 50)
+    print('Phase 2: Tomasi, Ended in ' + str(time.time() - phase2_start) + ' seconds')
     # compare to this built-in Tomasi corner detector
-    # corners1 = cv2.goodFeaturesToTrack(gray1, **feature_params)
-    mark_corners(old_frame, corners1)
+    # corners1 = cv2.goodFeaturesToTrack(to_gray(old_frame), **feature_params)
+    corners1 = corners1.astype(np.float32)  # required  by builtin_lk to be of type np.float32
+    # mark_corners(old_frame, corners1)
 
     # 3. Use built-in optical flow detector (Lucas-Kanade)
-    # builtin_lk(old_frame0, new_frame, corners, lk_params)
+    result = builtin_lk(old_frame, new_frame, corners1, lk_params)
 
     # 4. Show the result
     cv2.namedWindow('Result', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('Result', 1600, 1200)
 
-    result = old_frame
+    # result = old_frame
     cv2.imshow('Result', result)
     while True:
         k = cv2.waitKey(0) & 0xff
