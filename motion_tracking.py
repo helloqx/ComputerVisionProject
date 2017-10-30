@@ -5,11 +5,15 @@ import cv2
 import numpy as np
 from scipy import signal
 
+from utils import get_eigmin, get_all_eigmin
+
+
 def mark_corners(img, corners):
     """Draw red circles on corners in the image"""
     for i in corners:
         x, y = i.ravel()
         cv2.circle(img, (x, y), 5, (0, 0, 255), -1)
+
 
 def show_detected_edges(gx, gy):
     # To show the edges detected
@@ -21,14 +25,12 @@ def show_detected_edges(gx, gy):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def get_eigmin(W):
-    eig_vals = np.linalg.eigvals(W.reshape(2,2))
-    return np.amin(eig_vals)
 
-"""Detect corners in a frame using Shi-Tomasi's Corner Detection Algorithm
-Returns an array of corners similar to cv2.goodFeaturesToTrack()
-"""    
 def detect_corners_tomasi(frame, max_corners, min_distance=13, window_size=13):
+    """
+    Detect corners in a frame using Shi-Tomasi's Corner Detection Algorithm
+    Returns an array of corners similar to cv2.goodFeaturesToTrack()
+    """
     gkern1d = signal.gaussian(window_size, std=3).reshape(window_size, 1)
     gkern2d = np.outer(gkern1d, gkern1d)
 
@@ -40,7 +42,7 @@ def detect_corners_tomasi(frame, max_corners, min_distance=13, window_size=13):
     # Truncate gx and gy so they are square and have the same shape for element-wise multiplication
     gx = gx[:, 0:ncols-1]
     gy = gy[0:nrows-1, :]
-    #show_detected_edges(gx, gy)
+    # show_detected_edges(gx, gy)
 
     I_xx = gx * gx
     I_xy = gx * gy
@@ -53,34 +55,39 @@ def detect_corners_tomasi(frame, max_corners, min_distance=13, window_size=13):
     print('Gonna start getting the eigmins now...')
     eig_start = time.time()
     W = np.stack([W_xx, W_xy, W_xy, W_yy], axis=2)
-    eig_mins = np.apply_along_axis(get_eigmin, 2, W)
+
+    eig_mins = get_all_eigmin(W_xx, W_xy, W_yy)
+    # eig_mins = np.apply_along_axis(get_eigmin, 2, W)
     print('Finished getting the eigmins in ' + str(time.time() - eig_start) + ' seconds')
 
     print('Gonna start the mosaicing now...')
     mosaic_start = time.time()
     max_eig_mins = np.zeros(eig_mins.shape)
-    for i in range(0, nrows-1, min_distance):
-        for j in range(0, ncols-1, min_distance):
-            i_end = min(i+min_distance, nrows-1)
-            j_end = min(j+min_distance, ncols-1)
-            
+    for i in range(0, nrows - 1, min_distance):
+        for j in range(0, ncols - 1, min_distance):
+            i_end = min(i + min_distance, nrows - 1)
+            j_end = min(j + min_distance, ncols - 1)
+
             # last window might not be of size min_distance x min_distance
-            window = eig_mins[i:i_end, j:j_end] 
+            window = eig_mins[i:i_end, j:j_end]
             r, c = np.unravel_index(window.argmax(), window.shape)
-            max_eig_mins[i+r][j+c] = window[r][c]            
+            max_eig_mins[i + r][j + c] = window[r][c]
     print('Finished mosaicing in ' + str(time.time() - mosaic_start) + ' seconds')
 
     cutoff_eig_min = np.partition(max_eig_mins.flatten(), -max_corners)[-max_corners]
-    
+
+    print(cutoff_eig_min)
     row_idxs, col_idxs = np.nonzero(max_eig_mins >= cutoff_eig_min)
     corners = np.vstack((col_idxs, row_idxs)).transpose()
     corners = corners.reshape(corners.size // 2, 1, 2)
-    
+
     # return value is in the form of (col, row) which corresponds to (x, y)
-    return corners  
+    return corners
+
 
 def to_gray(image):
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
 
 def builtin_lk(old_frame0, new_frame, corners, lk_params):
     old_gray = to_gray(old_frame)
@@ -88,16 +95,16 @@ def builtin_lk(old_frame0, new_frame, corners, lk_params):
 
     mask = np.zeros_like(old_frame)
     new_corners, st, err = cv2.calcOpticalFlowPyrLK(old_gray, new_gray, corners, None, **lk_params)
-    
+
     good_old = corners[st == 1]
     good_new = new_corners[st == 1]
-    
+
     for old, new in zip(good_old, good_new):
         a, b = new.ravel()
         c, d = old.ravel()
         cv2.line(mask, (a, b), (c, d), (0, 255, 0), 2)
         cv2.circle(new_frame, (a, b), 5, (0, 255, 0), -1)
-    return  cv2.add(new_frame, mask)
+    return cv2.add(new_frame, mask)
 
 if __name__ == '__main__':
     # Parameters setup for various processes
