@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from scipy import signal
 
-from utils import get_eigmin, get_all_eigmin
+from utils import get_all_eigmin
 
 
 def mark_corners(img, corners):
