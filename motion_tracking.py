@@ -76,7 +76,6 @@ def detect_corners_tomasi(frame, max_corners, min_distance=13, window_size=13):
 
     cutoff_eig_min = np.partition(max_eig_mins.flatten(), -max_corners)[-max_corners]
 
-    print(cutoff_eig_min)
     row_idxs, col_idxs = np.nonzero(max_eig_mins >= cutoff_eig_min)
     corners = np.vstack((col_idxs, row_idxs)).transpose()
     corners = corners.reshape(corners.size // 2, 1, 2)
