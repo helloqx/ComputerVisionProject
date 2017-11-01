@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import time
 
 import cv2
 import numpy as np
@@ -33,7 +32,7 @@ def lkt(old_frame, new_frame, corners, lk_params):
 
     mask = np.zeros_like(old_frame)
 
-    new_corners, st, err = calc_optical_flow_pyr_lk(old_gray, new_gray, corners, lk_params, True)
+    new_corners, st, err = calc_optical_flow_pyr_lk(old_gray, new_gray, corners, lk_params, False)
 
     good_old = corners[st == 1]
     good_new = new_corners[st == 1]
@@ -41,8 +40,8 @@ def lkt(old_frame, new_frame, corners, lk_params):
     for old, new in zip(good_old, good_new):
         newX, newY = new.ravel()
         oldX, oldY = old.ravel()
-        cv2.line(mask, (newX, newY), (oldX, oldY), (0, 255, 0), 2)
-        cv2.circle(new_frame, (newX, newY), 3, (0, 255, 0), -1)
+        cv2.line(mask, (newX, newY), (oldX, oldY), (0, 255, 0), 1)
+        cv2.circle(new_frame, (newX, newY), 1, (0, 255, 0), -1)
     return cv2.add(new_frame, mask)
 
 if __name__ == '__main__':
