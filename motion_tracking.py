@@ -58,10 +58,13 @@ if __name__ == '__main__':
     # 1. Read image
     old_frame = cv2.imread('f1.jpg')
     new_frame = cv2.imread('f2.jpg')
+    # old_frame = cv2.imread('input1.jpg')
+    # new_frame = cv2.imread('input2.jpg')
 
     # 2. Detect corners using built-in tracker
     corners1 = get_good_features(to_gray(old_frame), **feature_params)
     # mark_corners(old_frame, corners1)
+    # result = old_frame
 
     # 3. Use built-in optical flow detector (Lucas-Kanade)
     result = lkt(old_frame, new_frame, corners1, lk_params)
@@ -70,7 +73,6 @@ if __name__ == '__main__':
     cv2.namedWindow('Result', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('Result', 1600, 1200)
 
-    # result = old_frame
     cv2.imshow('Result', result)
     while True:
         k = cv2.waitKey(0) & 0xff

@@ -3,6 +3,8 @@ import time
 import numpy as np
 from scipy import signal
 
+D_THRESHOLD = 2
+
 
 def get_centered_window(frame, x, y, win_size):
     # assumes that pixels out of frame are all 0
@@ -41,12 +43,15 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
     I_xy = Ix * Iy
     I_yy = Iy * Iy
 
+    print(I_xx.shape)
+    print(I_xy.shape)
+    print(I_yy.shape)
     W_xx = signal.convolve2d(I_xx, gkern2d, mode='same')  # get sum I_xx with Gaussian weight
     W_xy = signal.convolve2d(I_xy, gkern2d, mode='same')  # get sum I_xy with Gaussian weight
     W_yy = signal.convolve2d(I_yy, gkern2d, mode='same')  # get sum I_yy with Gaussian weight
 
     I_minus_J = old_frame - new_frame
-    I_minus_J = I_minus_J[0:frame_rows - 1, 0: frame_cols - 1]
+    I_minus_J = I_minus_J[0:frame_rows - 1, 0:frame_cols - 1]
     I_minus_J_x = I_minus_J * Ix
     I_minus_J_y = I_minus_J * Iy
     W_I_minus_J_x = signal.convolve2d(I_minus_J_x, gkern2d, mode='same')  # get sum(I-J)Ix with Gaussian weight
@@ -65,8 +70,7 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
         get sum(I-J)Iy with Gaussian weight
     """
     for idx, corner in enumerate(corners):
-        corner = corner
-        x, y = map(int, corner[0])
+        y, x = map(int, corner[0])  # values are reversed for some reason
         # [Z b]
         Z = [
             [W_xx[x, y], W_xy[x, y]],
@@ -82,9 +86,10 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
         # inner = np.transpose(U) * b
         # rhs = inner / np.diag(S)
         # d = V * rhs
-        # print(corner, d)
+        print(corner, d)
         new_corners[idx] = corner + np.transpose(d)
-        status[idx] = 1
+
+        status[idx] = int(d.transpose().dot(d) > D_THRESHOLD)
 
     print('Phase 3: Lucas Kanade Tomasi, Ended in ' + str(time.time() - phase3_start) + ' seconds')
 
