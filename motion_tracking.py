@@ -6,7 +6,9 @@ import numpy as np
 from calOpticalFlow import calc_optical_flow_pyr_lk
 from corners_tracking import get_good_features
 from utils import to_gray
+from pyramid import pyra_down
 
+DISCARD_CRAPPY_CORNERS = True
 
 def mark_corners(img, corners):
     """Draw red circles on corners in the image"""
@@ -40,9 +42,17 @@ def lkt(old_frame, new_frame, corners, lk_params):
     for old, new in zip(good_old, good_new):
         newX, newY = new.ravel()
         oldX, oldY = old.ravel()
-        cv2.line(mask, (newX, newY), (oldX, oldY), (0, 255, 0), 1)
+        nextX = newX + newX - oldX
+        nextY = newY + newY - oldY
+        # cv2.line(mask, (newX, newY), (oldX, oldY), (0, 0, 255), 1)
+        cv2.line(mask, (nextX, nextY), (newX, newY), (0, 0, 255), 1)
         cv2.circle(new_frame, (newX, newY), 1, (0, 255, 0), -1)
-    return cv2.add(new_frame, mask)
+
+    if DISCARD_CRAPPY_CORNERS:
+        new_corners = good_new
+
+    return cv2.add(new_frame, mask), new_corners
+
 
 if __name__ == '__main__':
     # Parameters setup for various processes
@@ -51,31 +61,62 @@ if __name__ == '__main__':
                           minDistance=10,
                           use_opencv=False)
 
-    lk_params = dict(winSize=(15, 15),
+    lk_params = dict(winSize=(7, 7),
                      maxLevel=4,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
-    # 1. Read image
-    old_frame = cv2.imread('f1.jpg')
-    new_frame = cv2.imread('f2.jpg')
-    # old_frame = cv2.imread('input1.jpg')
-    # new_frame = cv2.imread('input2.jpg')
+    cap = cv2.VideoCapture('traffic.mp4')
+    if (cap.isOpened() is False):
+        print("Error opening video stream or file")
 
-    # 2. Detect corners using built-in tracker
-    corners1 = get_good_features(to_gray(old_frame), **feature_params)
-    # mark_corners(old_frame, corners1)
-    # result = old_frame
+    vid_frames = []
+    while(cap.isOpened()):
+        ret, v_frame = cap.read()
 
-    # 3. Use built-in optical flow detector (Lucas-Kanade)
-    result = lkt(old_frame, new_frame, corners1, lk_params)
+        if ret is False:  # reached end of frame
+            break
+        vid_frames.append(v_frame)
 
-    # 4. Show the result
-    cv2.namedWindow('Result', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('Result', 1600, 1200)
+    total_frames = len(vid_frames)
+    print('Read %s frames' % total_frames)
 
-    cv2.imshow('Result', result)
+    frame_index = 0
+    tracked_corners = None
     while True:
-        k = cv2.waitKey(0) & 0xff
-        if k == 27:
+        # 1. Read image
+        prev_frame = np.copy(vid_frames[frame_index])
+        curr_frame = np.copy(vid_frames[frame_index + 1])
+
+        # 2. Detect corners using built-in tracker
+        if tracked_corners is None:
+            tracked_corners = get_good_features(to_gray(prev_frame), **feature_params)
+
+        # 3. Use built-in optical flow detector (Lucas-Kanade)
+        result, new_corners = lkt(prev_frame, curr_frame, tracked_corners, lk_params)
+
+        # mark_corners(prev_frame, tracked_corners)
+        # result = prev_frame
+
+        # 4. Show the result
+        # cv2.namedWindow('Result', cv2.WINDOW_NORMAL)
+        # cv2.resizeWindow('Result', 1600, 1200)
+        cv2.destroyAllWindows()
+        cv2.imshow('Result %s' % frame_index, result)
+
+        # handling key presses
+        k = cv2.waitKey(0) & 0x00ff
+        if k == 106:  # j key
+            # goes back one frame and resets corners
+            frame_index = max(0, frame_index - 1)
+            tracked_corners = None
+        if k == 107:  # k key
+            # stay on current frame and resets corners
+            tracked_corners = None
+        if k == 108:  # l key
+            # move to next frame and reuse corners
+            frame_index = min(total_frames - 2, frame_index + 1)
+            tracked_corners = new_corners
+        if k == 27:  # esc key
+            # close program
             cv2.destroyAllWindows()
             break
