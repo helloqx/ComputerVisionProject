@@ -1,11 +1,26 @@
+
+# coding: utf-8
+
+# In[1]:
+
 import numpy as np
 import cv2
+
+
+# In[2]:
+
+PATH_IMAGE = "./Frames/f360.jpg"
+image = cv2.imread(PATH_IMAGE)
+
+
+# In[3]:
 
 # dummy function
 def nothing(x):
     pass
 
-PATH_VIDEO = "ghost.mp4"
+
+# In[13]:
 
 # Track bar window
 cv2.namedWindow('Threshold Finder')
@@ -18,16 +33,10 @@ cv2.createTrackbar('uH', 'Threshold Finder', 180, 180, nothing)
 cv2.createTrackbar('uS', 'Threshold Finder', 255, 255, nothing)
 cv2.createTrackbar('uV', 'Threshold Finder', 255, 255, nothing)
 
-cap = cv2.VideoCapture(PATH_VIDEO)
-
 while True:
-    # Read from camera
-    source, frame = cap.read()
-    if not source:
-        break
 
     # converting image color to HSV color space
-    hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
+    hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
 
     # Getting values from track bars
     lH = cv2.getTrackbarPos('lH', 'Threshold Finder')
@@ -43,13 +52,18 @@ while True:
     mask = cv2.inRange(hsv, lowerb, upperb)
     
     # Bitwise-AND mask and original image
-    res = cv2.bitwise_and(frame, frame, mask= mask)
+    res = cv2.bitwise_and(image, image, mask= mask)
     cv2.imshow('Threshold Finder', res)
 
     # Press Q on keyboard to exit
     key = cv2.waitKey(25) & 0xFF
     if key == ord('q'):
         break
-
-cap.release()
+        
 cv2.destroyAllWindows()
+
+
+# In[ ]:
+
+
+
