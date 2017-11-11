@@ -8,3 +8,21 @@ def to_gray(image):
 
 def get_all_eigmin(W_xx, W_xy, W_yy):
     return (W_xx * W_yy - W_xy ** 2) / (W_xx + W_yy + EPSILON)
+
+def read_video_frames(videoFilename):
+    cap = cv2.VideoCapture(videoFilename)
+    if not cap.isOpened():
+        print("Error opening video stream or file")
+
+    vid_frames = []
+    while(cap.isOpened()):
+        ret, v_frame = cap.read()
+
+        if not ret:
+            # reached end of frame
+            break
+        vid_frames.append(v_frame)
+
+    total_frames = len(vid_frames)
+    print('Read %s frames' % total_frames)
+    return vid_frames
