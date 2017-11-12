@@ -65,7 +65,7 @@ if __name__ == '__main__':
                      maxLevel=4,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
-    cap = cv2.VideoCapture('traffic.mp4')
+    cap = cv2.VideoCapture('assets/traffic.mp4')
     if (cap.isOpened() is False):
         print("Error opening video stream or file")
 

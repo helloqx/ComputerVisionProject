@@ -9,6 +9,7 @@ def to_gray(image):
 def get_all_eigmin(W_xx, W_xy, W_yy):
     return (W_xx * W_yy - W_xy ** 2) / (W_xx + W_yy + EPSILON)
 
+
 def read_video_frames(videoFilename):
     cap = cv2.VideoCapture(videoFilename)
     if not cap.isOpened():
