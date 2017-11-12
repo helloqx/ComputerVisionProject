@@ -8,7 +8,8 @@ from utils import get_all_eigmin, to_gray
 
 def get_good_features(frame, **kwargs):
     if kwargs.get('use_opencv', False):
-        return cv2.goodFeaturesToTrack(to_gray(frame), kwargs)
+        del kwargs['use_opencv']
+        return cv2.goodFeaturesToTrack(frame, **kwargs)
 
     print('Phase 2: Tomasi')
     phase2_start = time.time()
