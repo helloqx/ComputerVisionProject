@@ -46,7 +46,6 @@ def main():
 
         # 2. Detect corners using built-in tracker
         if tracked_corners is None:
-            # corners1 = cv2.goodFeaturesToTrack(gray1, **feature_params)
             tracked_corners = get_good_features(to_gray(prev_frame), **feature_params)
 
         # 3. Use built-in optical flow detector (Lucas-Kanade)
