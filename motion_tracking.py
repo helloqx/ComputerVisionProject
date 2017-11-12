@@ -77,11 +77,11 @@ def lkt(old_frame, new_frame, corners, lk_params):
         old_x, old_y = old.ravel()
         new_x, new_y = new.ravel()
         
-        delta_x = int(np.rint(old_x - (new_x - old_x) * 15))
-        delta_y = int(np.rint(old_y - (new_y - old_y) * 15))
+        extended_old_x = int(np.rint(old_x - (new_x - old_x) * 15))
+        extended_old_y = int(np.rint(old_y - (new_y - old_y) * 15))
         #print old, np.rint(new), np.rint(new) - old, delta_x, delta_y
 
-        cv2.line(new_frame, (new_x, new_y), (delta_x, delta_y), (0, 0, 255), 2)
+        cv2.line(new_frame, (new_x, new_y), (extended_old_x, extended_old_y), (0, 0, 255), 2)
         cv2.circle(new_frame, (new_x, new_y), 3, (0,0,0), -1)
 
     if DISCARD_CRAPPY_CORNERS:
