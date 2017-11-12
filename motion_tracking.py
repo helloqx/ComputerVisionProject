@@ -46,24 +46,11 @@ def main():
 
         # 2. Detect corners using built-in tracker
         if tracked_corners is None:
+            # corners1 = cv2.goodFeaturesToTrack(gray1, **feature_params)
             tracked_corners = get_good_features(to_gray(prev_frame), **feature_params)
 
         # 3. Use built-in optical flow detector (Lucas-Kanade)
         result, new_corners = lkt(prev_frame, curr_frame, tracked_corners, lk_params)
-
-        # NOTE: DON'T DELETE -- FOR COMPARISON WITH THE BUILT-IN LK
-        # mask = np.zeros_like(old_frame)
-        # corners2, st, err = cv2.calcOpticalFlowPyrLK(gray1, gray2, corners1, None, **lk_params)
-        #
-        # good_new = corners2[st == 1]
-        # good_old = corners1[st == 1]
-        #
-        # for new, old in zip(good_new, good_old):
-        #     a, b = new.ravel()
-        #     c, d = old.ravel()
-        #     cv2.line(mask, (a, b), (c, d), (0, 255, 0), 2)
-        #     cv2.circle(new_frame, (a, b), 5, (0, 255, 0), -1)
-        # result = cv2.add(new_frame, mask)
 
         # mark_corners(prev_frame, tracked_corners)
         # result = prev_frame
@@ -118,6 +105,7 @@ def lkt(old_frame, new_frame, corners, lk_params):
     mask = np.zeros_like(old_frame)
 
     new_corners, st, err = calc_optical_flow_pyr_lk(old_gray, new_gray, corners, lk_params, False)
+    # new_corners, st, err = cv2.calcOpticalFlowPyrLK(old_gray, new_gray, corners, None, **lk_params)
 
     good_old = corners[st == 1]
     good_new = new_corners[st == 1]
