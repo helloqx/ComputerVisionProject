@@ -12,7 +12,7 @@ DISCARD_CRAPPY_CORNERS = True
 
 def main():
     # Parameters setup for various processes
-    feature_params = dict(maxCorners=100,
+    feature_params = dict(maxCorners=500,
                           qualityLevel=0.1,
                           minDistance=13,
                           use_opencv=False)
@@ -28,8 +28,8 @@ def main():
     tracked_corners = None
     while True:
         # 1. Read image
-        old_frame = np.copy(vid_frames[frame_index+1])
-        new_frame = np.copy(vid_frames[frame_index])
+        old_frame = np.copy(vid_frames[frame_index])
+        new_frame = np.copy(vid_frames[frame_index+1])
 
         # 2. Detect corners using built-in tracker
         if tracked_corners is None:
@@ -74,14 +74,15 @@ def lkt(old_frame, new_frame, corners, lk_params):
     good_new = new_corners[st == 1]
 
     for old, new in zip(good_old, good_new):
-        old_row, old_col = old.ravel()
-        new_row, new_col = new.ravel()
+        old_x, old_y = old.ravel()
+        new_x, new_y = new.ravel()
         
-        delta_row = int(np.rint(old_row - (new_row - old_row) * 10))
-        delta_col = int(np.rint(old_col - (new_col - old_col) * 10))
+        delta_x = int(np.rint(old_x - (new_x - old_x) * 15))
+        delta_y = int(np.rint(old_y - (new_y - old_y) * 15))
+        #print old, np.rint(new), np.rint(new) - old, delta_x, delta_y
 
-        cv2.line(new_frame, (new_row, new_col), (delta_row, delta_col), (0, 0, 255), 2)
-        cv2.circle(new_frame, (new_row, new_col), 2, (0,0,0), -1)
+        cv2.line(new_frame, (new_x, new_y), (delta_x, delta_y), (0, 0, 255), 2)
+        cv2.circle(new_frame, (new_x, new_y), 3, (0,0,0), -1)
 
     if DISCARD_CRAPPY_CORNERS:
         new_corners = good_new

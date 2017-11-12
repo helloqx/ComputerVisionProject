@@ -12,8 +12,8 @@ def get_all_eigmin(W_xx, W_xy, W_yy):
 
 def mark_corners(img, corners, size=2, color=(0, 0, 255)):
     for c in corners:
-        row, col = np.rint(c).ravel()
-        cv2.circle(img, (int(row), int(col)), size, color, -1)
+        x, y = np.rint(c).ravel()
+        cv2.circle(img, (int(x), int(y)), size, color, -1)
 
 
 def show_detected_edges(gx, gy):

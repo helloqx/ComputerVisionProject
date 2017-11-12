@@ -4,7 +4,7 @@ import numpy as np
 from numpy.linalg import LinAlgError
 from scipy import signal
 
-D_THRESHOLD = 1e-5
+D_THRESHOLD = 5e-2
 
 def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_original=False):
     if use_original:
@@ -24,8 +24,8 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
 
     old_frame = np.int32(old_frame)  # cast. Otherwise we'll get overflow
     new_frame = np.int32(new_frame)  # cast. Otherwise we'll get overflow
-    Ix = (old_frame[:-1, :-1] - old_frame[:-1, 1:])
-    Iy = (old_frame[:-1, :-1] - old_frame[1:, :-1])
+    Ix = old_frame[:-1, 1:] - old_frame[:-1, :-1]
+    Iy = old_frame[1:, :-1] - old_frame[:-1, :-1]
 
     W_xx = signal.convolve2d(Ix * Ix, gkern2d, mode='same')  # get sum I_xx with Gaussian weight
     W_xy = signal.convolve2d(Ix * Iy, gkern2d, mode='same')  # get sum I_xy with Gaussian weight
@@ -45,11 +45,11 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
         try:
             c = c.reshape(-1)
             c_int = np.rint(c)
-            row = int(c_int[0])
-            col = int(c_int[1])
+            x = int(c_int[0])
+            y = int(c_int[1])
             
-            Zc = Z[row, col].reshape(2,2)
-            bc = b[row, col].reshape(2,1)
+            Zc = Z[y, x].reshape(2,2)
+            bc = b[y, x].reshape(2,1)
             d = np.linalg.solve(Zc, bc).reshape(-1)
 
             new_corners[idx] = c + d
