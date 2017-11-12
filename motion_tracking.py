@@ -30,6 +30,8 @@ def main():
         # 1. Read image
         old_frame = np.copy(vid_frames[frame_index+1])
         new_frame = np.copy(vid_frames[frame_index])
+        # old_frame = cv2.imread('assets/input1.jpg')
+        # new_frame = cv2.imread('assets/input2.jpg')
 
         # 2. Detect corners using built-in tracker
         if tracked_corners is None:
@@ -41,6 +43,7 @@ def main():
         # 4. Show the result
         # cv2.namedWindow('Result', cv2.WINDOW_NORMAL)
         # cv2.resizeWindow('Result', 1600, 1200)
+        # cv2.imshow('Result', result)
         cv2.destroyAllWindows()
         cv2.imshow('Result %s' % frame_index, result)
 
@@ -67,21 +70,21 @@ def lkt(old_frame, new_frame, corners, lk_params):
     old_gray = to_gray(old_frame)
     new_gray = to_gray(new_frame)
 
-    new_corners, st, err = calc_optical_flow_pyr_lk(old_gray, new_gray, corners, lk_params, False)
+    new_corners, st, err = calc_optical_flow_pyr_lk(old_gray, new_gray, corners, lk_params, use_original=False)
     # new_corners, st, err = cv2.calcOpticalFlowPyrLK(old_gray, new_gray, corners, None, **lk_params)
 
     good_old = corners[st == 1]
     good_new = new_corners[st == 1]
 
     for old, new in zip(good_old, good_new):
-        old_row, old_col = old.ravel()
-        new_row, new_col = new.ravel()
+        old_col, old_row = old.ravel()
+        new_col, new_row = new.ravel()
         
         delta_row = int(np.rint(old_row - (new_row - old_row) * 10))
         delta_col = int(np.rint(old_col - (new_col - old_col) * 10))
 
-        cv2.line(new_frame, (new_row, new_col), (delta_row, delta_col), (0, 0, 255), 2)
-        cv2.circle(new_frame, (new_row, new_col), 2, (0,0,0), -1)
+        cv2.line(new_frame, (new_col, new_row), (delta_col, delta_row), (0, 0, 255), 2)
+        cv2.circle(new_frame, (new_col, new_row), 2, (0,0,0), -1)
 
     if DISCARD_CRAPPY_CORNERS:
         new_corners = good_new
