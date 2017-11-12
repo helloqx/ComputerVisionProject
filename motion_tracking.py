@@ -5,7 +5,7 @@ import numpy as np
 
 from calOpticalFlow import calc_optical_flow_pyr_lk
 from corners_tracking import get_good_features
-from utils import to_gray
+from utils import to_gray, read_video_frames
 from pyramid import pyra_down
 
 DISCARD_CRAPPY_CORNERS = True
@@ -22,20 +22,7 @@ def main():
                      maxLevel=4,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
-    cap = cv2.VideoCapture('assets/traffic.mp4')
-    if cap.isOpened() is False:
-        print('Error opening video stream or file')
-
-    vid_frames = []
-    while cap.isOpened():
-        ret, v_frame = cap.read()
-
-        if ret is False:  # reached end of frame
-            break
-        vid_frames.append(v_frame)
-
-    total_frames = len(vid_frames)
-    print('Read %s frames' % total_frames)
+    total_frames, vid_frames = read_video_frames('assets/traffic.mp4')
 
     frame_index = 0
     tracked_corners = None

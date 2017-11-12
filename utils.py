@@ -10,8 +10,8 @@ def get_all_eigmin(W_xx, W_xy, W_yy):
     return (W_xx * W_yy - W_xy ** 2) / (W_xx + W_yy + EPSILON)
 
 
-def read_video_frames(videoFilename):
-    cap = cv2.VideoCapture(videoFilename)
+def read_video_frames(file_name):
+    cap = cv2.VideoCapture(file_name)
     if not cap.isOpened():
         print("Error opening video stream or file")
 
@@ -26,4 +26,4 @@ def read_video_frames(videoFilename):
 
     total_frames = len(vid_frames)
     print('Read %s frames' % total_frames)
-    return vid_frames
+    return total_frames, vid_frames

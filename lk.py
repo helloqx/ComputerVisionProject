@@ -16,7 +16,7 @@ if __name__ == '__main__':
                           minDistance=10,
                           use_opencv=False)
 
-    vid_frames = read_video_frames('assets/traffic.mp4')
+    total_frames, vid_frames = read_video_frames('assets/traffic.mp4')
 
     win_size = 13
     gkern1d = signal.gaussian(win_size, std=3).reshape(win_size, 1)
