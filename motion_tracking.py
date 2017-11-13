@@ -9,10 +9,12 @@ from utils import *
 from pyramid import pyra_down
 
 DISCARD_CRAPPY_CORNERS = True
+DEBUG = True
+
 
 def main():
     # Parameters setup for various processes
-    feature_params = dict(maxCorners=200,
+    feature_params = dict(maxCorners=20,
                           qualityLevel=0.1,
                           minDistance=13,
                           use_opencv=False)
@@ -21,24 +23,23 @@ def main():
                      maxLevel=4,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
-    total_frames, vid_frames = read_video_frames('assets/traffic.mp4')
-    # vid_frames = [cv2.imread('assets/input1.jpg'), cv2.imread('assets/input2.jpg')]
-
     frame_index = 0
     tracked_corners = None
     while True:
         # 1. Read image
-        old_frame = np.copy(vid_frames[frame_index])
-        new_frame = np.copy(vid_frames[frame_index+1])
+        old_frame = cv2.imread('assets/input1.jpg')
+        new_frame = cv2.imread('assets/input2.jpg')
 
         # 2. Detect corners using built-in tracker
         if tracked_corners is None:
-            tracked_corners = get_good_features(to_gray(old_frame), **feature_params)
-        # mark_corners(old_frame, tracked_corners)
+            tracked_corners = get_good_features(to_grayscale(old_frame), **feature_params)
+        if DEBUG:
+            mark_corners(old_frame, tracked_corners)
+            show_images({'Corners detected': old_frame})
         # result = old_frame
 
         # 3. Use built-in optical flow detector (Lucas-Kanade)
-        result, new_corners = lkt(old_frame, new_frame, tracked_corners, lk_params)
+        # result, new_corners = lkt(old_frame, new_frame, tracked_corners, lk_params)
 
         # 4. Show the result
         # cv2.namedWindow('Result', cv2.WINDOW_NORMAL)
@@ -67,8 +68,8 @@ def main():
 
 
 def lkt(old_frame, new_frame, corners, lk_params):
-    old_gray = to_gray(old_frame)
-    new_gray = to_gray(new_frame)
+    old_gray = to_grayscale(old_frame)
+    new_gray = to_grayscale(new_frame)
 
     new_corners, st, err = calc_optical_flow_pyr_lk(old_gray, new_gray, corners, lk_params, use_original=False)
 

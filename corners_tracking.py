@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 from scipy import signal
-from utils import get_all_eigmin, to_gray
+from utils import get_all_eigmin, to_grayscale
 
 
 def get_good_features(frame, **kwargs):
