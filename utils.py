@@ -16,16 +16,16 @@ def get_all_eigmin(W_xx, W_xy, W_yy):
     return (W_xx * W_yy - W_xy ** 2) / (W_xx + W_yy + EPSILON)
 
 
-def mark_corners(img, corners, size=2, color=(0, 0, 255), with_coords=False):
+def mark_corners(img, corners, size=3, color=(0, 0, 255), with_coords=False):
     for c in corners:
         x, y = np.rint(c).ravel()
         x, y = int(x), int(y)
         cv2.circle(img, (x, y), size, color, -1)
         if with_coords:
             # Add the coordinate information if True
-            font = cv2.FONT_HERSHEY_DUPLEX
+            font = cv2.FONT_HERSHEY_SIMPLEX
             coord_text = '({}, {})'.format(x, y)
-            cv2.putText(img, coord_text, (x+3, y+3), font, 0.5, color, thickness=1, lineType=cv2.LINE_4)
+            cv2.putText(img, coord_text, (x+3, y+3), font, 2, color, thickness=1, lineType=cv2.LINE_4)
 
 
 def show_detected_edges(gx, gy):
@@ -61,7 +61,7 @@ def read_video_frames(file_name):
     return total_frames, vid_frames
 
 
-def show_images(image_dict, normalized=True):
+def show_images(image_dict, normalized=False):
     """
     Show images that you pass in image_dict
     :param image_dict: a dict in which the key is the title, and the value is the image to be shown
