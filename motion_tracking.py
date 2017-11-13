@@ -12,7 +12,7 @@ DISCARD_CRAPPY_CORNERS = True
 
 def main():
     # Parameters setup for various processes
-    feature_params = dict(maxCorners=500,
+    feature_params = dict(maxCorners=200,
                           qualityLevel=0.1,
                           minDistance=13,
                           use_opencv=False)
@@ -22,7 +22,7 @@ def main():
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
     total_frames, vid_frames = read_video_frames('assets/traffic.mp4')
-    #vid_frames = [cv2.imread('assets/2.jpg'), cv2.imread('assets/1.jpg')]
+    # vid_frames = [cv2.imread('assets/input1.jpg'), cv2.imread('assets/input2.jpg')]
 
     frame_index = 0
     tracked_corners = None
@@ -34,6 +34,8 @@ def main():
         # 2. Detect corners using built-in tracker
         if tracked_corners is None:
             tracked_corners = get_good_features(to_gray(old_frame), **feature_params)
+        # mark_corners(old_frame, tracked_corners)
+        # result = old_frame
 
         # 3. Use built-in optical flow detector (Lucas-Kanade)
         result, new_corners = lkt(old_frame, new_frame, tracked_corners, lk_params)
@@ -41,6 +43,7 @@ def main():
         # 4. Show the result
         # cv2.namedWindow('Result', cv2.WINDOW_NORMAL)
         # cv2.resizeWindow('Result', 1600, 1200)
+        # cv2.imshow('Result', result)
         cv2.destroyAllWindows()
         cv2.imshow('Result %s' % frame_index, result)
 
@@ -67,8 +70,7 @@ def lkt(old_frame, new_frame, corners, lk_params):
     old_gray = to_gray(old_frame)
     new_gray = to_gray(new_frame)
 
-    new_corners, st, err = calc_optical_flow_pyr_lk(old_gray, new_gray, corners, lk_params, False)
-    # new_corners, st, err = cv2.calcOpticalFlowPyrLK(old_gray, new_gray, corners, None, **lk_params)
+    new_corners, st, err = calc_optical_flow_pyr_lk(old_gray, new_gray, corners, lk_params, use_original=False)
 
     good_old = corners[st == 1]
     good_new = new_corners[st == 1]

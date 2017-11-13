@@ -6,6 +6,7 @@ from scipy import signal
 
 D_THRESHOLD = 5e-2
 
+
 def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_original=False):
     if use_original:
         return cv2.calcOpticalFlowPyrLK(old_frame, new_frame, corners, None, **lk_params)
@@ -24,12 +25,22 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
 
     old_frame = np.int32(old_frame)  # cast. Otherwise we'll get overflow
     new_frame = np.int32(new_frame)  # cast. Otherwise we'll get overflow
-    Ix = old_frame[:-1, 1:] - old_frame[:-1, :-1]
-    Iy = old_frame[1:, :-1] - old_frame[:-1, :-1]
+    Ix = old_frame[1:, :-1] - old_frame[:-1, :-1]
+    Iy = old_frame[:-1, 1:] - old_frame[:-1, :-1]
 
     W_xx = signal.convolve2d(Ix * Ix, gkern2d, mode='same')  # get sum I_xx with Gaussian weight
     W_xy = signal.convolve2d(Ix * Iy, gkern2d, mode='same')  # get sum I_xy with Gaussian weight
     W_yy = signal.convolve2d(Iy * Iy, gkern2d, mode='same')  # get sum I_yy with Gaussian weight
+
+    # DEBUG: show the edges detected
+    # show_these = {'Ix': Ix, 'Iy': Iy, 'W_xx': W_xx, 'W_yy': W_yy}
+    # for k, v in show_these.items():
+    #     res = np.sqrt(v * v)
+    #     res *= 255 / res.max()
+    #     res = np.uint8(res)
+    #     cv2.imshow(k, res)
+    # k = cv2.waitKey(0) & 0x00ff
+    # cv2.destroyAllWindows()
 
     Z = np.dstack([W_xx, W_xy, W_xy, W_yy])
 
@@ -38,7 +49,7 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
     I_minus_J_y = I_minus_J * Iy
     W_I_minus_J_x = signal.convolve2d(I_minus_J_x, gkern2d, mode='same')  # get sum(I-J)Ix with Gaussian weight
     W_I_minus_J_y = signal.convolve2d(I_minus_J_y, gkern2d, mode='same')  # get sum(I-J)Iy with Gaussian weight
-    
+
     b = np.dstack([W_I_minus_J_x, W_I_minus_J_y])
 
     for idx, c in enumerate(corners):
