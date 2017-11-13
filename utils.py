@@ -61,7 +61,7 @@ def read_video_frames(file_name):
     return total_frames, vid_frames
 
 
-def show_images(image_dict):
+def show_images(image_dict, normalized=True):
     """
     Show images that you pass in image_dict
     :param image_dict: a dict in which the key is the title, and the value is the image to be shown
@@ -69,9 +69,16 @@ def show_images(image_dict):
     """
 
     for k, v in image_dict.items():
+        res = v
+        if normalized:
+            # normalize the color values if flagged True
+            res = np.sqrt(v * v)
+            res *= 255 / res.max()
+            res = np.uint8(res)
+
         cv2.namedWindow(k, cv2.WINDOW_NORMAL)
         cv2.resizeWindow(k, 1600, 1200)
-        cv2.imshow(k, v)
+        cv2.imshow(k, res)
     while True:
         key = cv2.waitKey(0) & 0x00ff
         if key == KEYS['esc']:

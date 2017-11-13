@@ -3,6 +3,7 @@ import time
 import numpy as np
 from numpy.linalg import LinAlgError
 from scipy import signal
+from utils import show_images
 
 D_THRESHOLD = 5e-2
 
@@ -34,13 +35,7 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
 
     # DEBUG: show the edges detected
     # show_these = {'Ix': Ix, 'Iy': Iy, 'W_xx': W_xx, 'W_yy': W_yy}
-    # for k, v in show_these.items():
-    #     res = np.sqrt(v * v)
-    #     res *= 255 / res.max()
-    #     res = np.uint8(res)
-    #     cv2.imshow(k, res)
-    # k = cv2.waitKey(0) & 0x00ff
-    # cv2.destroyAllWindows()
+    # show_images(show_these, normalized=True)
 
     Z = np.dstack([W_xx, W_xy, W_xy, W_yy])
 

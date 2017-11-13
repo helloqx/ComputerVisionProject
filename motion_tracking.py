@@ -34,7 +34,7 @@ def main():
         if tracked_corners is None:
             tracked_corners = get_good_features(to_grayscale(old_frame), **feature_params)
         if DEBUG:
-            mark_corners(old_frame, tracked_corners)
+            mark_corners(old_frame, tracked_corners, with_coords=True)
             show_images({'Corners detected': old_frame})
         # result = old_frame
 

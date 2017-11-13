@@ -48,13 +48,7 @@ def detect_corners_tomasi(frame, max_corners, min_distance, window_size):
 
     # DEBUG: show the edges detected
     # show_these = {'Ix': gx, 'Iy': gy, 'W_xx': W_xx, 'W_yy': W_yy}
-    # for k, v in show_these.items():
-    #     res = np.sqrt(v * v)
-    #     res *= 255 / res.max()
-    #     res = np.uint8(res)
-    #     cv2.imshow(k, res)
-    # k = cv2.waitKey(0) & 0x00ff
-    # cv2.destroyAllWindows()
+    # show_images(show_these, normalized=True)
 
     print('\tGonna start getting the eigmins now...')
     eig_start = time.time()
