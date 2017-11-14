@@ -9,7 +9,6 @@ from utils import *
 from pyramid import pyra_down
 
 DISCARD_CRAPPY_CORNERS = True
-DEBUG = True
 
 
 def main():
@@ -26,7 +25,7 @@ def main():
 
     # 1. Read image
     old_frame = cv2.imread('assets/checkerboard_1.jpg')
-    new_frame = cv2.imread('assets/checkerboard_3.jpg')
+    new_frame = cv2.imread('assets/checkerboard_6.jpg')
 
     # 2. Detect corners
     tracked_corners = get_good_features(to_grayscale(old_frame), **feature_params)

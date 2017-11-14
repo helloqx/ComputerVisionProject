@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 
 EPSILON = 0.15
+DEBUG = True
 
 KEYS = {
     'esc': 27

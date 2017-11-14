@@ -3,7 +3,7 @@ import time
 import numpy as np
 from numpy.linalg import LinAlgError
 from scipy import signal
-from motion_tracking import DEBUG
+from utils import DEBUG
 
 D_THRESHOLD = 5e-2
 
@@ -47,8 +47,7 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
 
     b = np.dstack([W_I_minus_J_x, W_I_minus_J_y])
 
-    if DEBUG:
-        ds = []
+    ds = []
     for idx, c in enumerate(corners):
         try:
             c = c.reshape(-1)
