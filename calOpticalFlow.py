@@ -58,11 +58,12 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
             Zc = Z[y, x].reshape(2,2)
             bc = b[y, x].reshape(2,1)
             d = np.linalg.solve(Zc, bc).reshape(-1)
+            d = d[::-1]
 
             if DEBUG:
                 ds.append(d)
 
-            new_corners[idx] = c + d[::-1]
+            new_corners[idx] = c + d
             status[idx] = int(d.T.dot(d) > D_THRESHOLD)
         except LinAlgError:
             status[idx] = 0
