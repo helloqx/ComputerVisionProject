@@ -3,7 +3,7 @@ import time
 import numpy as np
 from numpy.linalg import LinAlgError
 from scipy import signal
-from utils import show_images
+from motion_tracking import DEBUG
 
 D_THRESHOLD = 5e-2
 
@@ -47,6 +47,8 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
 
     b = np.dstack([W_I_minus_J_x, W_I_minus_J_y])
 
+    if DEBUG:
+        ds = []
     for idx, c in enumerate(corners):
         try:
             c = c.reshape(-1)
@@ -58,12 +60,19 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
             bc = b[y, x].reshape(2,1)
             d = np.linalg.solve(Zc, bc).reshape(-1)
 
-            new_corners[idx] = c + d
+            if DEBUG:
+                ds.append(d)
+
+            new_corners[idx] = c + d[::-1]
             status[idx] = int(d.T.dot(d) > D_THRESHOLD)
         except LinAlgError:
             status[idx] = 0
         except IndexError:
             status[idx] = 0
+
+    if DEBUG:
+        import pprint
+        pprint.pprint(ds)
 
     print('Phase 3: Lucas Kanade Tomasi, Ended in ' + str(time.time() - phase3_start) + ' seconds')
 

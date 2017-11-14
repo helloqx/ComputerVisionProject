@@ -31,3 +31,21 @@ Top-left corner: (280, 336)
 Size: (3576, 2480)
 The effect of this image relative to checkerboard_1.jpg is that the object
 moved 10 pixels left and up
+
+## checkerboard_5.jpg
+Top-left corner: (273, 329)
+Size: (3576, 2480)
+The effect of this image relative to checkerboard_1.jpg is that the object
+moved 1 pixels left and up
+
+## checkerboard_6.jpg
+Top-left corner: (274, 328)
+Size: (3576, 2480)
+The effect of this image relative to checkerboard_1.jpg is that the object
+moved 2 pixels left
+
+## checkerboard_7.jpg
+Top-left corner: (272, 330)
+Size: (3576, 2480)
+The effect of this image relative to checkerboard_1.jpg is that the object
+moved 2 pixels up

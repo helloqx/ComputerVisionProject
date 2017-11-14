@@ -50,6 +50,7 @@ def detect_corners_tomasi(frame, max_corners, min_distance, window_size):
     # show_these = {'Ix': gx, 'Iy': gy, 'W_xx': W_xx, 'W_yy': W_yy}
     # show_images(show_these, normalized=True)
 
+    # , flush=True -> for Python 3.5+, so that the printing flush immediately
     print('\tGonna start getting the eigmins now...')
     eig_start = time.time()
 
@@ -73,6 +74,7 @@ def detect_corners_tomasi(frame, max_corners, min_distance, window_size):
     cutoff_eig_min = np.partition(max_eig_mins.flatten(), -max_corners)[-max_corners]
 
     row_idxs, col_idxs = np.nonzero(max_eig_mins >= cutoff_eig_min)
+    row_idxs, col_idxs = row_idxs[:max_corners], col_idxs[:max_corners]
     corners = np.vstack((col_idxs, row_idxs)).transpose()
     corners = corners.reshape(corners.size // 2, 1, 2)
 
