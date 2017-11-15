@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 from scipy import signal
-from utils import get_all_eigmin, to_gray
+from utils import get_all_eigmin, to_grayscale
 
 
 def get_good_features(frame, **kwargs):
@@ -48,14 +48,9 @@ def detect_corners_tomasi(frame, max_corners, min_distance, window_size):
 
     # DEBUG: show the edges detected
     # show_these = {'Ix': gx, 'Iy': gy, 'W_xx': W_xx, 'W_yy': W_yy}
-    # for k, v in show_these.items():
-    #     res = np.sqrt(v * v)
-    #     res *= 255 / res.max()
-    #     res = np.uint8(res)
-    #     cv2.imshow(k, res)
-    # k = cv2.waitKey(0) & 0x00ff
-    # cv2.destroyAllWindows()
+    # show_images(show_these, normalized=True)
 
+    # , flush=True -> for Python 3.5+, so that the printing flush immediately
     print('\tGonna start getting the eigmins now...')
     eig_start = time.time()
 
@@ -79,6 +74,7 @@ def detect_corners_tomasi(frame, max_corners, min_distance, window_size):
     cutoff_eig_min = np.partition(max_eig_mins.flatten(), -max_corners)[-max_corners]
 
     row_idxs, col_idxs = np.nonzero(max_eig_mins >= cutoff_eig_min)
+    row_idxs, col_idxs = row_idxs[:max_corners], col_idxs[:max_corners]
     corners = np.vstack((col_idxs, row_idxs)).transpose()
     corners = corners.reshape(corners.size // 2, 1, 2)
 

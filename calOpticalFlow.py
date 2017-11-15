@@ -3,6 +3,7 @@ import time
 import numpy as np
 from numpy.linalg import LinAlgError
 from scipy import signal
+from utils import DEBUG
 
 D_THRESHOLD = 5e-2
 
@@ -19,7 +20,7 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
     err = 0
     winSize = lk_params.get('winSize')[0]
 
-    gkern1d = signal.gaussian(winSize, std=3).reshape(winSize, 1)
+    gkern1d = signal.gaussian(winSize, std=31).reshape(winSize, 1)
     gkern2d = np.outer(gkern1d, gkern1d)
     gkern2d /= np.sum(gkern2d)  # normalize
 
@@ -34,13 +35,7 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
 
     # DEBUG: show the edges detected
     # show_these = {'Ix': Ix, 'Iy': Iy, 'W_xx': W_xx, 'W_yy': W_yy}
-    # for k, v in show_these.items():
-    #     res = np.sqrt(v * v)
-    #     res *= 255 / res.max()
-    #     res = np.uint8(res)
-    #     cv2.imshow(k, res)
-    # k = cv2.waitKey(0) & 0x00ff
-    # cv2.destroyAllWindows()
+    # show_images(show_these, normalized=True)
 
     Z = np.dstack([W_xx, W_xy, W_xy, W_yy])
 
@@ -52,6 +47,7 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
 
     b = np.dstack([W_I_minus_J_x, W_I_minus_J_y])
 
+    ds = []
     for idx, c in enumerate(corners):
         try:
             c = c.reshape(-1)
@@ -62,6 +58,10 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
             Zc = Z[y, x].reshape(2,2)
             bc = b[y, x].reshape(2,1)
             d = np.linalg.solve(Zc, bc).reshape(-1)
+            d = d[::-1]
+
+            if DEBUG:
+                ds.append(d)
 
             new_corners[idx] = c + d
             status[idx] = int(d.T.dot(d) > D_THRESHOLD)
@@ -69,6 +69,10 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
             status[idx] = 0
         except IndexError:
             status[idx] = 0
+
+    if DEBUG:
+        import pprint
+        pprint.pprint(ds)
 
     print('Phase 3: Lucas Kanade Tomasi, Ended in ' + str(time.time() - phase3_start) + ' seconds')
 
