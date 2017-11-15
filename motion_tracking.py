@@ -24,8 +24,8 @@ def main():
 
 
     # 1. Read image
-    old_frame = cv2.imread('assets/input1.jpg')
-    new_frame = cv2.imread('assets/input5.jpg')
+    old_frame = cv2.imread('assets/checkerboard_1.jpg')
+    new_frame = cv2.imread('assets/checkerboard_2.jpg')
 
     # 2. Detect corners
     tracked_corners = get_good_features(to_grayscale(old_frame), **feature_params)
