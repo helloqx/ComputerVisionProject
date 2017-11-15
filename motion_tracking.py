@@ -12,20 +12,20 @@ DISCARD_CRAPPY_CORNERS = False
 
 def main():
     # Parameters setup for various processes
-    feature_params = dict(maxCorners=50,
+    feature_params = dict(maxCorners=100,
                           qualityLevel=0.1,
                           minDistance=13,
-                          use_opencv=True)
+                          use_opencv=False)
 
     lk_params = dict(winSize=(13, 13),
                      maxLevel=4,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
     # 1. Read image
-    # old_frame = cv2.imread('assets/input1.jpg')
-    # new_frame = cv2.imread('assets/input2.jpg')
-    old_frame = cv2.imread('assets/checkerboard_1.jpg')
-    new_frame = cv2.imread('assets/checkerboard_2.jpg')
+    old_frame = cv2.imread('assets/input1.jpg')
+    new_frame = cv2.imread('assets/input2.jpg')
+    # old_frame = cv2.imread('assets/checkerboard_1.jpg')
+    # new_frame = cv2.imread('assets/checkerboard_2.jpg')
 
     old_frame = cv2.GaussianBlur(old_frame, (13, 13), 9)
     new_frame = cv2.GaussianBlur(new_frame, (13, 13), 9)
@@ -73,7 +73,7 @@ def lkt(old_frame, new_frame, corners, lk_params):
     old_gray = to_grayscale(old_frame)
     new_gray = to_grayscale(new_frame)
 
-    new_corners, st, err = calc_optical_flow_pyr_lk(old_gray, new_gray, corners, lk_params, use_original=True)
+    new_corners, st, err = calc_optical_flow_pyr_lk(old_gray, new_gray, corners, lk_params, use_original=False)
 
     # good_old = corners[st == 1]
     # good_new = new_corners[st == 1]

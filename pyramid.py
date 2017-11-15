@@ -7,7 +7,7 @@ WIN_SIZE = 3
 
 def pyra_down(source):
     isColor = False
-    print(source.shape)
+    # print(source.shape)
     try:
         rows, cols, _ = source.shape  # color
         half_rows = rows >> 1

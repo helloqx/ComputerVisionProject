@@ -19,6 +19,11 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
 
     new_corners = np.zeros_like(corners)
     st = np.ones_like(corners)  # taking all to be successful
+
+    # levels to array index mapping
+    # 0 -> original
+    # 1 -> original / 2
+    # 2... etc etc
     old_frame_levels = [old_frame]
     new_frame_levels = [new_frame]
 

@@ -19,8 +19,8 @@ def do_lk(old_frame, new_frame, corner, predicted_corner):
     # window I @ x, y
     try:
         window_I = get_centered_window(old_frame, corner_x, corner_y, WIN_SIZE)
-        if DEBUG:
-            print(window_I)
+        # if DEBUG:
+        #     print(window_I)
         # window I @ x + 1, y
         window_Ix = get_centered_window(old_frame, corner_x + 1, corner_y, WIN_SIZE)
         # print(window_Ix)
@@ -72,10 +72,7 @@ def calc_optical_flow_pyr_lk_single(old_frame_levels, new_frame_levels, corner):
         (row, col): calculated position of corner
     """
 
-    # does 4 iterations of pyra down
-    # 0 -> original
-    # 1 -> original / 2
-    # 2... etc etc
+    # does LEVELS iterations of pyra down
     corner_val_at_levels = [corner]
     for i in range(LEVELS):
         corner_val_at_levels.append(corner_val_at_levels[i] / 2)
