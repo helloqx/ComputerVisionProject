@@ -12,7 +12,7 @@ DISCARD_CRAPPY_CORNERS = False
 
 def main():
     # Parameters setup for various processes
-    feature_params = dict(maxCorners=100,
+    feature_params = dict(maxCorners=50,
                           qualityLevel=0.1,
                           minDistance=13,
                           use_opencv=False)

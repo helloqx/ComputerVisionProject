@@ -3,7 +3,7 @@ import numpy as np
 
 EPSILON = 0.15
 DEBUG = True
-LEVELS = 7
+LEVELS = 4
 WIN_SIZE = 13  # used by single_point_lk
 KEYS = {
     'esc': 27
