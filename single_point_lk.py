@@ -5,13 +5,19 @@ LK_REPEATS = 10
 
 
 def do_lk(old_frame, new_frame, corner, predicted_corner):
-    """ This should be almost the same as our old lk
-    Args
-        old_frame
-        new_frame
-        corner: the col row of the point of interest, i.e., I
-        predicted_corner: the col row of POI in the new frame i.e., J
-    Returns
+    """LK implementation with manual window selection and double summation
+    Uses backwards difference in calculation fo Ix, Iy
+
+    If any of the calculation errors out, then the lk is regarded as a d=0 result.
+
+    This should be almost the same as our old lk with the exception of the variable predicted_corner
+
+    Args:
+        old_frame: I frame to be operated on
+        new_frame: J frame to be operated on
+        corner: the col row of the point of interest, i.e., I(x)
+        predicted_corner: the col row of POI in the new frame i.e., J(x)
+    Return:
         d: calculated direction of corner from I
     """
     old_frame = np.int32(old_frame)  # cast. Otherwise we'll get overflow
@@ -63,13 +69,21 @@ def do_lk(old_frame, new_frame, corner, predicted_corner):
 
 
 def calc_optical_flow_pyr_lk_single(old_frame_levels, new_frame_levels, corner):
-    """
-    Args
-        old_frame_levels
-        new_frame_levels
+    """Does LKT on the single corner with pyramid
+
+    This algorithm starts off at the deepest depth and at each depth, repeats lk for
+    LK_REPEATS number of times to refine the results.
+
+    The located results at each depth is then propogated over to its next higher depth.
+
+    Args:
+        old_frame_levels: array size MUST be LEVELS + 1
+        new_frame_levels: array size MUST be LEVELS + 1
         corner: the col row of the point of interest
-    Returns
+    Return:
         (row, col): calculated position of corner
+
+
     """
 
     # does LEVELS iterations of pyra down
@@ -88,7 +102,7 @@ def calc_optical_flow_pyr_lk_single(old_frame_levels, new_frame_levels, corner):
                 corner_val_at_levels[cur_level],
                 corner_val_at_levels[cur_level] + d
             )
-            # update d to be d = 2(d_old + d_found)
+            # update d to as d_updated = d + d_new
             d = new_d + d
 
     new_corner = corner + d
