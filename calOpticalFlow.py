@@ -20,7 +20,7 @@ def calc_optical_flow_pyr_lk(old_frame, new_frame, corners, lk_params, use_origi
     err = 0
     winSize = lk_params.get('winSize')[0]
 
-    gkern1d = signal.gaussian(winSize, std=3).reshape(winSize, 1)
+    gkern1d = signal.gaussian(winSize, std=31).reshape(winSize, 1)
     gkern2d = np.outer(gkern1d, gkern1d)
     gkern2d /= np.sum(gkern2d)  # normalize
 

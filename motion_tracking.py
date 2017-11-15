@@ -24,14 +24,18 @@ def main():
 
 
     # 1. Read image
-    old_frame = cv2.imread('assets/checkerboard_1.jpg')
-    new_frame = cv2.imread('assets/checkerboard_2.jpg')
+    old_frame = cv2.imread('assets/input1.jpg')
+    new_frame = cv2.imread('assets/input2.jpg')
 
+    old_frame = cv2.GaussianBlur(old_frame, (13, 13), 9)
+    new_frame = cv2.GaussianBlur(new_frame, (13, 13), 9)
+
+    # show_images({'Result': old_frame})
     # 2. Detect corners
     tracked_corners = get_good_features(to_grayscale(old_frame), **feature_params)
     # if DEBUG:
-        # mark_corners(old_frame, tracked_corners, size=5, with_coords=False)  # will screw up the LK
-        # show_images({'Corners detected': old_frame}, normalized=False)
+    #     mark_corners(old_frame, tracked_corners, size=5, with_coords=False)  # will screw up the LK
+    #     show_images({'Corners detected': old_frame}, normalized=False)
     # result = old_frame
 
     # 3. Use optical flow detector (Lucas-Kanade)
