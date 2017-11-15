@@ -3,7 +3,8 @@ import numpy as np
 
 EPSILON = 0.15
 DEBUG = True
-
+LEVELS = 4
+WIN_SIZE = 13  # used by single_point_lk
 KEYS = {
     'esc': 27
 }
@@ -86,3 +87,17 @@ def show_images(image_dict, normalized=False):
             for k in image_dict.keys():
                 cv2.destroyWindow(k)
             break
+
+
+def get_centered_window(frame, x, y, win_size):
+    # assumes that pixels out of frame are all 0
+
+    delta = (win_size - 1) >> 1
+    # print(delta, x - delta, x + delta)
+    # print(frame.shape)
+    # TODO: Need to check for edge on the right/down most
+    if x < delta or y < delta:
+        raise Exception('X, Y is near edge; Window not full')
+    window = frame[x - delta:x + delta][:, y - delta: y + delta]
+    # print(window)
+    return window

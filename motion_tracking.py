@@ -6,26 +6,26 @@ import numpy as np
 from calOpticalFlow import calc_optical_flow_pyr_lk
 from corners_tracking import get_good_features
 from utils import *
-from pyramid import pyra_down
 
-DISCARD_CRAPPY_CORNERS = True
+DISCARD_CRAPPY_CORNERS = False
 
 
 def main():
     # Parameters setup for various processes
-    feature_params = dict(maxCorners=30,
+    feature_params = dict(maxCorners=50,
                           qualityLevel=0.1,
                           minDistance=13,
-                          use_opencv=False)
+                          use_opencv=True)
 
     lk_params = dict(winSize=(13, 13),
                      maxLevel=4,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
-
     # 1. Read image
-    old_frame = cv2.imread('assets/input1.jpg')
-    new_frame = cv2.imread('assets/input2.jpg')
+    # old_frame = cv2.imread('assets/input1.jpg')
+    # new_frame = cv2.imread('assets/input2.jpg')
+    old_frame = cv2.imread('assets/checkerboard_1.jpg')
+    new_frame = cv2.imread('assets/checkerboard_2.jpg')
 
     old_frame = cv2.GaussianBlur(old_frame, (13, 13), 9)
     new_frame = cv2.GaussianBlur(new_frame, (13, 13), 9)
@@ -73,21 +73,24 @@ def lkt(old_frame, new_frame, corners, lk_params):
     old_gray = to_grayscale(old_frame)
     new_gray = to_grayscale(new_frame)
 
-    new_corners, st, err = calc_optical_flow_pyr_lk(old_gray, new_gray, corners, lk_params, use_original=False)
+    new_corners, st, err = calc_optical_flow_pyr_lk(old_gray, new_gray, corners, lk_params, use_original=True)
 
-    good_old = corners[st == 1]
-    good_new = new_corners[st == 1]
+    # good_old = corners[st == 1]
+    # good_new = new_corners[st == 1]
+    good_old = corners
+    good_new = new_corners
 
     for old, new in zip(good_old, good_new):
         old_x, old_y = old.ravel()
         new_x, new_y = new.ravel()
-        
+
         extended_old_x = int(np.rint(old_x - (new_x - old_x) * 15))
         extended_old_y = int(np.rint(old_y - (new_y - old_y) * 15))
-        #print old, np.rint(new), np.rint(new) - old, delta_x, delta_y
-
-        cv2.line(new_frame, (new_x, new_y), (extended_old_x, extended_old_y), (0, 0, 255), 2)
-        cv2.circle(new_frame, (new_x, new_y), 3, (0,0,0), -1)
+        # print old, np.rint(new), np.rint(new) - old, delta_x, delta_y
+        new_x = int(np.rint(new_x))
+        new_y = int(np.rint(new_y))
+        cv2.line(new_frame, (old_x, old_y), (extended_old_x, extended_old_y), (0, 0, 255), 2)
+        cv2.circle(new_frame, (old_x, old_y), 3, (0, 0, 0), -1)
 
     if DISCARD_CRAPPY_CORNERS:
         new_corners = good_new
