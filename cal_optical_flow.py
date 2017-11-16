@@ -1,8 +1,7 @@
 import cv2
 import time
 import numpy as np
-from scipy import signal
-from utils import DEBUG, LEVELS
+from utils import LEVELS
 from pyramid import pyra_down
 from single_point_lk import calc_optical_flow_pyr_lk_single
 

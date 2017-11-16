@@ -3,13 +3,10 @@ import cv2
 import numpy as np
 
 from scipy import signal
-from utils import get_all_eigmin, to_grayscale
+from utils import get_all_eigmin
 
 
 def get_good_features(frame, **kwargs):
-    if kwargs.get('use_opencv', False):
-        del kwargs['use_opencv']
-        return cv2.goodFeaturesToTrack(frame, **kwargs)
 
     print('Phase 2: Tomasi')
     phase2_start = time.time()
@@ -17,7 +14,7 @@ def get_good_features(frame, **kwargs):
     corners = detect_corners_tomasi(frame, kwargs['maxCorners'], kwargs['minDistance'], kwargs.get('winSize', 13))
     print('Phase 2: Tomasi, Ended in ' + str(time.time() - phase2_start) + ' seconds')
 
-    return corners.astype(np.float32)  # required  by builtin_lk to be of type np.float32
+    return corners.astype(np.float32)
 
 
 def detect_corners_tomasi(frame, max_corners, min_distance, window_size):
@@ -38,23 +35,18 @@ def detect_corners_tomasi(frame, max_corners, min_distance, window_size):
     gy = gy[0:nrows - 1, :]
     # show_detected_edges(gx, gy)
 
-    I_xx = gx * gx
-    I_xy = gx * gy
-    I_yy = gy * gy
+    i_xx = gx * gx
+    i_xy = gx * gy
+    i_yy = gy * gy
 
-    W_xx = signal.convolve2d(I_xx, gkern2d, mode='same')
-    W_xy = signal.convolve2d(I_xy, gkern2d, mode='same')
-    W_yy = signal.convolve2d(I_yy, gkern2d, mode='same')
+    w_xx = signal.convolve2d(i_xx, gkern2d, mode='same')
+    w_xy = signal.convolve2d(i_xy, gkern2d, mode='same')
+    w_yy = signal.convolve2d(i_yy, gkern2d, mode='same')
 
-    # DEBUG: show the edges detected
-    # show_these = {'Ix': gx, 'Iy': gy, 'W_xx': W_xx, 'W_yy': W_yy}
-    # show_images(show_these, normalized=True)
-
-    # , flush=True -> for Python 3.5+, so that the printing flush immediately
     print('\tGonna start getting the eigmins now...')
     eig_start = time.time()
 
-    eig_mins = get_all_eigmin(W_xx, W_xy, W_yy)
+    eig_mins = get_all_eigmin(w_xx, w_xy, w_yy)
     print('\tFinished getting the eigmins in ' + str(time.time() - eig_start) + ' seconds')
 
     print('\tGonna start the mosaicing now...')

@@ -3,11 +3,12 @@
 import cv2
 import numpy as np
 
-from calOpticalFlow import calc_optical_flow_pyr_lk
+from cal_optical_flow import calc_optical_flow_pyr_lk
 from corners_tracking import get_good_features
-from utils import *
+from utils import to_grayscale, DEBUG, show_images
 
 DISCARD_CRAPPY_CORNERS = False
+LINE_MAGNITUDE = 15
 
 
 def main():
@@ -30,43 +31,13 @@ def main():
     old_frame = cv2.GaussianBlur(old_frame, (13, 13), 9)
     new_frame = cv2.GaussianBlur(new_frame, (13, 13), 9)
 
-    # show_images({'Result': old_frame})
     # 2. Detect corners
     tracked_corners = get_good_features(to_grayscale(old_frame), **feature_params)
-    # if DEBUG:
-    #     mark_corners(old_frame, tracked_corners, size=5, with_coords=False)  # will screw up the LK
-    #     show_images({'Corners detected': old_frame}, normalized=False)
-    # result = old_frame
 
     # 3. Use optical flow detector (Lucas-Kanade)
     result, new_corners = lkt(old_frame, new_frame, tracked_corners, lk_params)
     if DEBUG:
         show_images({'LK': result})
-
-    # 4. Show the result
-    # cv2.namedWindow('Result', cv2.WINDOW_NORMAL)
-    # cv2.resizeWindow('Result', 1600, 1200)
-    # cv2.imshow('Result', result)
-    # cv2.destroyAllWindows()
-    # cv2.imshow('Result %s' % frame_index, result)
-    #
-    # # handling key presses
-    # k = cv2.waitKey(0) & 0x00ff
-    # if k == 106:  # j key
-    #     # goes back one frame and resets corners
-    #     frame_index = max(0, frame_index - 1)
-    #     tracked_corners = None
-    # if k == 107:  # k key
-    #     # stay on current frame and resets corners
-    #     tracked_corners = None
-    # if k == 108:  # l key
-    #     # move to next frame and reuse corners
-    #     frame_index = min(total_frames - 2, frame_index + 1)
-    #     tracked_corners = new_corners
-    # if k == 27:  # esc key
-    #     # close program
-    #     cv2.destroyAllWindows()
-    #     break
 
 
 def lkt(old_frame, new_frame, corners, lk_params):
@@ -75,8 +46,6 @@ def lkt(old_frame, new_frame, corners, lk_params):
 
     new_corners, st, err = calc_optical_flow_pyr_lk(old_gray, new_gray, corners, lk_params, use_original=False)
 
-    # good_old = corners[st == 1]
-    # good_new = new_corners[st == 1]
     good_old = corners
     good_new = new_corners
 
@@ -84,9 +53,9 @@ def lkt(old_frame, new_frame, corners, lk_params):
         old_x, old_y = old.ravel()
         new_x, new_y = new.ravel()
 
-        extended_old_x = int(np.rint(old_x - (new_x - old_x) * 15))
-        extended_old_y = int(np.rint(old_y - (new_y - old_y) * 15))
-        # print old, np.rint(new), np.rint(new) - old, delta_x, delta_y
+        extended_old_x = int(np.rint(old_x - (new_x - old_x) * LINE_MAGNITUDE))
+        extended_old_y = int(np.rint(old_y - (new_y - old_y) * LINE_MAGNITUDE))
+
         new_x = int(np.rint(new_x))
         new_y = int(np.rint(new_y))
         cv2.line(new_frame, (old_x, old_y), (extended_old_x, extended_old_y), (0, 0, 255), 2)
@@ -96,6 +65,7 @@ def lkt(old_frame, new_frame, corners, lk_params):
         new_corners = good_new
 
     return new_frame, new_corners
+
 
 if __name__ == '__main__':
     main()
