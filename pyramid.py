@@ -6,14 +6,14 @@ WIN_SIZE = 3
 
 
 def pyra_down(source):
-    isColor = False
+    is_color = False
     # print(source.shape)
     try:
         rows, cols, _ = source.shape  # color
         half_rows = rows >> 1
         half_cols = cols >> 1
         down_source = np.zeros([half_rows, half_cols, 3])
-        isColor = True
+        is_color = True
     except ValueError:
         rows, cols = source.shape  # greyscale
         half_rows = rows >> 1
@@ -25,8 +25,8 @@ def pyra_down(source):
     gkern2d = np.outer(gkern1d, gkern1d)
     gkern2d /= np.sum(gkern2d)  # normalizing to length 1
 
-    # kernel with normalized gaussian and non-mixing weights on colour channels
-    if isColor:
+    # kernel with normalized gaussian and non-mixing weights on color channels
+    if is_color:
         gkern3d = np.reshape(gkern2d, [WIN_SIZE, WIN_SIZE, 1])
     else:
         gkern3d = gkern2d

@@ -1,12 +1,12 @@
 import numpy as np
-from utils import get_centered_window, DEBUG, WIN_SIZE, LEVELS
+from utils import get_centered_window, WIN_SIZE, LEVELS
 
 LK_REPEATS = 10
 
 
 def do_lk(old_frame, new_frame, corner, predicted_corner):
     """LK implementation with manual window selection and double summation
-    Uses backwards difference in calculation fo Ix, Iy
+    Uses backwards difference in calculation fo i_x, i_y
 
     If any of the calculation errors out, then the lk is regarded as a d=0 result.
 
@@ -20,47 +20,41 @@ def do_lk(old_frame, new_frame, corner, predicted_corner):
     Return:
         d: calculated direction of corner from I
     """
+
     old_frame = np.int32(old_frame)  # cast. Otherwise we'll get overflow
     new_frame = np.int32(new_frame)  # cast. Otherwise we'll get overflow
 
     corner_y, corner_x = map(int, np.rint(corner[0]))
+
     # window I @ x, y
     try:
-        window_I = get_centered_window(old_frame, corner_x, corner_y, WIN_SIZE)
-        # if DEBUG:
-        #     print(window_I)
-        # window I @ x + 1, y
-        window_Ix = get_centered_window(old_frame, corner_x - 1, corner_y, WIN_SIZE)
-        # print(window_Ix)
-        # window I @ x, y + 1
-        window_Iy = get_centered_window(old_frame, corner_x, corner_y - 1, WIN_SIZE)
-        # print(window_Iy)
+        window_i = get_centered_window(old_frame, corner_x, corner_y, WIN_SIZE)
+        window_i_x = get_centered_window(old_frame, corner_x - 1, corner_y, WIN_SIZE)
+        window_i_y = get_centered_window(old_frame, corner_x, corner_y - 1, WIN_SIZE)
 
         # using backwards difference, slide 36
-        Ix = window_I - window_Ix
-        Iy = window_I - window_Iy
-        # print(Ix)
-        # print(Iy)
+        i_x = window_i - window_i_x
+        i_y = window_i - window_i_y
 
         # double summation instead of convolve
-        W_xx = np.sum(Ix * Ix)
-        W_xy = np.sum(Ix * Iy)
-        W_yy = np.sum(Iy * Iy)
+        w_xx = np.sum(i_x * i_x)
+        w_xy = np.sum(i_x * i_y)
+        w_yy = np.sum(i_y * i_y)
 
         corner_J_y, corner_J_x = map(int, np.rint(predicted_corner[0]))
-        window_J = get_centered_window(new_frame, corner_J_x, corner_J_y, WIN_SIZE)
+        window_j = get_centered_window(new_frame, corner_J_x, corner_J_y, WIN_SIZE)
 
-        I_minus_J = window_I - window_J
-        I_minus_J_x = I_minus_J * Ix
-        I_minus_J_y = I_minus_J * Iy
+        i_minus_j = window_i - window_j
+        i_minus_j_x = i_minus_j * i_x
+        i_minus_j_y = i_minus_j * i_y
 
-        W_I_minus_J_x = np.sum(I_minus_J_x)  # get sum (I-J)Ix
-        W_I_minus_J_y = np.sum(I_minus_J_y)  # get sum (I-J)Iy
+        w_i_minus_j_x = np.sum(i_minus_j_x)  # get sum (I-J)i_x
+        w_i_minus_j_y = np.sum(i_minus_j_y)  # get sum (I-J)i_y
 
-        Z = [[W_xx, W_xy], [W_xy, W_yy]]
-        b = [W_I_minus_J_x, W_I_minus_J_y]
+        z = [[w_xx, w_xy], [w_xy, w_yy]]
+        b = [w_i_minus_j_x, w_i_minus_j_y]
 
-        d = np.linalg.solve(Z, b).reshape(-1)
+        d = np.linalg.solve(z, b).reshape(-1)
         d = d[::-1]
 
         return d
