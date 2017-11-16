@@ -1,7 +1,7 @@
 # Images Description
 
-## checkerboard_original.jpg
-All the other checkerboard_*.jpg are derived from this original image through cropping using GIMP Image Editor
+## Checkerboard
+All the other checkerboard_*.jpg are derived from checkerboard_original.jpg through cropping using GIMP Image Editor
 GIMP Image editor uses the same coordinate configuration as OpenCV:
 (x, y) corresponds to (col, row). The top left corner is (0, 0) and
 x increases as you go to the right, y increases as you go to the bottom
@@ -49,3 +49,39 @@ Top-left corner: (272, 330)
 Size: (3576, 2480)
 The effect of this image relative to checkerboard_1.jpg is that the object
 moved 2 pixels up
+
+## Mountain
+All the other input*.jpg are derived from input.jpg
+
+### input1.jpg
+Top-left corner: (1606, 440)
+Size: (2419, 1854)
+
+### input2.jpg
+Top-left corner: (1610, 443)
+Size: (2419, 1854)
+4x4px off from input1.jpg
+
+### input3.jpg
+Top-left corner: (1614, 446)
+Size: (2419, 1854)
+4x4px off from input2.jpg
+
+### input4.jpg
+Top-left corner: (1618, 449)
+Size: (2419, 1854)
+4x4px off from input3.jpg
+
+### input5.jpg
+Top-left corner: (1607, 441)
+Size: (2419, 1854)
+
+### input6.jpg
+Top-left corner: (1608, 442)
+Size: (2419, 1854)
+2x2px off from input1.jpg
+
+### input7.jpg
+Top-left corner: (1609, 443)
+Size: (2419, 1854)
+3x3px off from input1.jpg
