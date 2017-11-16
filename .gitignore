@@ -102,5 +102,4 @@ ENV/
 
 # Intellij IDEA
 .idea/
-Video/Frames/
-*.avi
+Video/Videos/
