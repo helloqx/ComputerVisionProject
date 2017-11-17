@@ -4,7 +4,7 @@ import time
 import cv2
 import numpy as np
 
-from pyramid import pyra_down
+from pyramid import downsize_frame
 from single_point_lk import calc_optical_flow_pyr_lk_single
 from corners_tracking import get_good_features
 from utils import *
@@ -73,8 +73,8 @@ def lucas_kanade(old_frame, new_frame, corners, lk_params, use_opencv=False):
     new_frame_levels = [new_frame]
 
     for i in range(LEVELS):
-        old_frame_levels.append(pyra_down(old_frame_levels[i]))
-        new_frame_levels.append(pyra_down(new_frame_levels[i]))
+        old_frame_levels.append(downsize_frame(old_frame_levels[i]))
+        new_frame_levels.append(downsize_frame(new_frame_levels[i]))
 
     for idx, corner in enumerate(corners):
         res = calc_optical_flow_pyr_lk_single(old_frame_levels, new_frame_levels, corner)
