@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import cv2
-import numpy as np
 
 from lucas_kanade import lucas_kanade
 from corners_tracking import get_good_features
@@ -39,7 +38,6 @@ def main():
     # 3. Use optical flow detector (Lucas-Kanade)
     tracked_corners, st = lucas_kanade(old_frame, new_frame, corners, lk_params)
 
-    # st?
     good_old = corners
     good_new = tracked_corners
     lk_result = mark_motions(new_frame, good_old, good_new)

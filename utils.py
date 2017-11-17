@@ -89,7 +89,6 @@ def get_centered_window(frame, x, y, win_size):
     # assumes that pixels out of frame are all 0
     delta = (win_size - 1) // 2
 
-    # TODO: Need to check for edge on the right/down most
     if x < delta or y < delta:
         raise Exception('X, Y is near edge; Window not full')
     window = frame[x - delta:x + delta, y - delta: y + delta]

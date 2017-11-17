@@ -36,7 +36,6 @@ def lucas_kanade(old_frame, new_frame, corners, lk_params, use_opencv=False):
         res = get_new_corner(old_frame_levels, new_frame_levels, corner)
         new_corners[idx] = res
 
-    # TODO: st should be filtering out corners without movement
     print('Phase 3: Lucas Kanade Tomasi, Ended in ' + str(time.time() - phase3_start) + ' seconds')
 
     return new_corners, st
