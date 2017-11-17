@@ -3,12 +3,12 @@ import numpy as np
 
 EPSILON = 0.15
 DEBUG = False
-LEVELS = 6
+LEVELS = 4
 WIN_SIZE = 13  # used by single_point_lk
 KEYS = {
     'esc': 27
 }
-LINE_MAGNITUDE = 15
+LINE_MAGNITUDE = 1
 
 
 def to_grayscale(image):
@@ -36,7 +36,7 @@ def mark_corners(frame, corners, size=3, color=(0, 0, 255), with_coords=False):
     return frame_copy
 
 
-def mark_motions(frame, old_corners, new_corners):
+def mark_motions(frame, old_corners, new_corners, extend_line=False):
     """Mark the motion of the corners: old_corner->good_corner
     :param frame: the frame to draw on
     :param old_corners: old corners
@@ -53,43 +53,10 @@ def mark_motions(frame, old_corners, new_corners):
 
         new_x = int(np.rint(new_x))
         new_y = int(np.rint(new_y))
-        cv2.line(frame_copy, (new_x, new_y), (old_x, old_y), (0, 0, 255), 2)
+        cv2.line(frame_copy, (new_x, new_y), (extended_old_x, extended_old_y), (0, 0, 255), 2)
         cv2.circle(frame_copy, (new_x, new_y), 3, (0, 0, 0), -1)
 
     return frame_copy
-
-
-def show_detected_edges(gx, gy):
-    # To show the edges detected
-    res = gx + gy
-    res = np.sqrt(res * res)
-    res *= 255 / res.max()
-    res = np.uint8(res)
-    cv2.imshow('res', res)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-
-def read_video_frames(file_name):
-    """
-    NOTE: This function should be deprecated since it's not a good idea to do LK on video
-    """
-    cap = cv2.VideoCapture(file_name)
-    if not cap.isOpened():
-        print("Error opening video stream or file")
-
-    vid_frames = []
-    while(cap.isOpened()):
-        ret, v_frame = cap.read()
-
-        if not ret:
-            # reached end of frame
-            break
-        vid_frames.append(v_frame)
-
-    total_frames = len(vid_frames)
-    print('Read %s frames' % total_frames)
-    return total_frames, vid_frames
 
 
 def show_images(image_dict, normalized=False):
