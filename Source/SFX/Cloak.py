@@ -5,24 +5,29 @@
 
 # In[1]:
 
+
 import cv2
 import numpy as np
 
 
-# In[2]:
+# In[270]:
 
-PATH_VIDEO = "ghost.mp4"
+
+PATH_VIDEO = "./Cloak.mov"
 PATH_OUTPUT = "output.avi"
 PATH_BG = "bg.jpg"
+PATH_BG_2 = "bg2.jpg"
 
 
-# In[3]:
+# In[328]:
 
-is_show_scenes = True
-is_save_video = False
+
+is_show_scenes = False
+is_save_video = True
 
 
 # In[4]:
+
 
 def open_video(path=PATH_VIDEO):
     cap = cv2.VideoCapture(PATH_VIDEO)
@@ -36,6 +41,7 @@ def open_video(path=PATH_VIDEO):
 
 # In[5]:
 
+
 def create_video_writer(video):
     # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -44,6 +50,7 @@ def create_video_writer(video):
 
 
 # In[6]:
+
 
 def get_single_frame(video, output_path, frame_num=0):
     '''
@@ -56,56 +63,57 @@ def get_single_frame(video, output_path, frame_num=0):
 
 # In[7]:
 
+
+def skip_to_frame(video, frame_num):
+    video.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
+
+
+# ##### Get background shot
+# cap = open_video()
+# get_single_frame(cap, "bgasd.jpg", 502)
+
+# In[253]:
+
+
 bg = cv2.imread(PATH_BG)
 
 
-# In[19]:
-
-green_brightest_low = np.array([60, 40, 255], np.uint8)
-green_brightest_upp = np.array([180, 255, 255], np.uint8)
-
-green_bright_low = np.array([60, 150, 70], np.uint8)
-green_bright_upp = np.array([90, 185, 255], np.uint8)
-
-green_dark_low = np.array([60, 185, 70], np.uint8)
-green_dark_upp = np.array([90, 235, 255], np.uint8)
-
-green_darkest_low = np.array([60, 235, 70], np.uint8)
-green_darkest_upp = np.array([90, 255, 255], np.uint8)
-
-
 # ## Helper Functions
-# _To be replaced with own implementation?_
 
-# In[9]:
+# In[10]:
+
 
 def convert_bgr_to_hsv(frame):
     hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
     return hsv
 
 
-# In[10]:
+# In[11]:
+
 
 def threshold_frame(hsv, lower_color, upper_color):
     mask = cv2.inRange(hsv, lower_color, upper_color)
     return mask
 
 
-# In[11]:
+# In[12]:
+
 
 def invert_frame(frame):
     frame_inv = cv2.bitwise_not(frame)
     return frame_inv
 
 
-# In[12]:
+# In[13]:
+
 
 def mask_frame(frame, mask):
     res = cv2.bitwise_and(frame, frame, mask=mask)
     return res
 
 
-# In[13]:
+# In[14]:
+
 
 def or_frames(frame1, frame2):
     return cv2.bitwise_or(frame1, frame2)
@@ -113,50 +121,247 @@ def or_frames(frame1, frame2):
 
 # ## Edit Video
 
-# In[23]:
+# In[329]:
+
+
+def process_frame(frameNum, frame):
+    '''
+        Scene:
+        0   - 135    walking in
+        135 - 479    unfolding
+        480 - 521    cloth over head
+        522 - 630    first wear
+        631 - 655    pulling over
+        656+         completely covered
+    '''
+    
+    if frameNum <= 479:
+        return cloth_texture(frame)
+    elif frameNum <= 521:
+        return protect_hair(frame)
+    elif frameNum <= 630:
+        return cloth_texture(frame)
+    elif frameNum <= 655:
+        return protect_hair(frame)
+    else:
+        return cloth_texture(frame)
+
+
+# In[259]:
+
+
+def protect_hair(frame):
+        
+        green_dk_low = np.array([0, 115, 70], np.uint8)
+        green_dk_upp = np.array([80, 255, 150], np.uint8)
+        green_nm_low = np.array([0, 115, 150], np.uint8)
+        green_nm_upp = np.array([80, 255, 200], np.uint8)
+        green_bt_low = np.array([0, 115, 200], np.uint8)
+        green_bt_upp = np.array([80, 255, 255], np.uint8)
+
+        head_low = np.array([75, 0, 0], np.uint8)
+        head_upp = np.array([100, 255, 255], np.uint8)
+        hair_low = np.array([0, 0, 0], np.uint8)
+        hair_upp = np.array([180, 255, 77], np.uint8)
+
+        hsv = convert_bgr_to_hsv(frame)
+        mask_dk = threshold_frame(hsv, green_dk_low, green_dk_upp)
+        mask_nm = threshold_frame(hsv, green_nm_low, green_nm_upp)
+        mask_bt = threshold_frame(hsv, green_bt_low, green_bt_upp)
+        
+        mask_head = threshold_frame(hsv, head_low, head_upp)
+        mask_hair = threshold_frame(hsv, hair_low, hair_upp)
+        
+        mask = or_frames(or_frames(mask_bt, mask_nm), mask_dk)
+        
+        kernel_ones = np.ones((3,3),np.uint8)
+        kernel_gauss = cv2.getGaussianKernel(5, 3)
+        
+        mask_dil = cv2.erode(mask, kernel_ones, iterations = 1)
+        mask_dil = cv2.dilate(mask_dil, kernel_ones, iterations = 5)
+        mask_dil = cv2.dilate(mask_dil, kernel_gauss, iterations = 5)
+        
+        mask_border = cv2.bitwise_and(invert_frame(mask), mask_dil)
+        mask_border = cv2.GaussianBlur(mask_border, (5,5), 0)
+        
+        
+        mask_border = cv2.min(invert_frame(mask_hair), mask_border)
+        mask_inv = invert_frame(mask_dil)
+        
+        mask_head = cv2.bitwise_and(mask_dil, mask_head)
+        
+        mask_inv = cv2.max(mask_inv, mask_head)
+        
+        og = mask_frame(frame, mask_inv)
+        
+        # Get "see-through" background
+        bg_bt = mask_frame(bg, mask_bt)
+        bg_nm = mask_frame(bg, mask_nm)
+        bg_dk = mask_frame(bg, mask_dk)
+        bg_border = mask_frame(bg, mask_border)
+        
+        background = mask_frame(bg, mask)
+        
+        alpha_border = 0.93
+        alpha_nm = 0.9
+        
+        alpha_bt = 0.87
+        alpha_d = 0.85
+        
+        cv2.addWeighted(bg_border, alpha_border, og, 0, 0.0, bg_border);
+        cv2.addWeighted(bg_nm, alpha_nm, og, 0, 0.0, bg_nm);
+        cv2.addWeighted(bg_bt, alpha_bt, og, 0, 0.0, bg_bt);
+        cv2.addWeighted(bg_dk, alpha_d, og, 0, 0.0, bg_dk);
+        
+        bg_bb = cv2.max(bg_bt, bg_dk)
+        bg_bd = cv2.max(bg_border, bg_nm) # BG_BORDER
+        bg_all = cv2.max(bg_bb, bg_bd)
+        
+        final = cv2.max(og, bg_all)
+        return final
+
+
+# In[316]:
+
+
+def cloth_texture(frame):
+        green_dk_low = np.array([0, 115, 70], np.uint8)
+        green_dk_upp = np.array([80, 255, 150], np.uint8)
+        green_nm_low = np.array([0, 115, 150], np.uint8)
+        green_nm_upp = np.array([80, 255, 200], np.uint8)
+        green_bt_low = np.array([0, 115, 200], np.uint8)
+        green_bt_upp = np.array([80, 255, 255], np.uint8)
+
+        hsv = convert_bgr_to_hsv(frame)
+        mask_dk = threshold_frame(hsv, green_dk_low, green_dk_upp)
+        mask_nm = threshold_frame(hsv, green_nm_low, green_nm_upp)
+        mask_bt = threshold_frame(hsv, green_bt_low, green_bt_upp)
+        
+        mask = or_frames(or_frames(mask_bt, mask_nm), mask_dk)
+        
+        kernel_ones = np.ones((3,3),np.uint8)
+        kernel_gauss = cv2.getGaussianKernel(5, 3)
+        
+        mask_dil = cv2.erode(mask, kernel_ones, iterations = 1)
+        mask_dil = cv2.dilate(mask_dil, kernel_ones, iterations = 5)
+        mask_dil = cv2.dilate(mask_dil, kernel_gauss, iterations = 5)
+        mask_border = cv2.bitwise_and(invert_frame(mask), mask_dil)
+        mask_border = cv2.GaussianBlur(mask_border, (5,5), 0)
+        mask_inv = invert_frame(mask_dil)
+        
+        og = mask_frame(frame, mask_inv)
+        
+        # Get "see-through" background
+        bg_bt = mask_frame(bg, mask_bt)
+        bg_nm = mask_frame(bg, mask_nm)
+        bg_dk = mask_frame(bg, mask_dk)
+        bg_border = mask_frame(bg, mask_border)
+        
+        background = mask_frame(bg, mask)
+        
+        alpha_border = 0.9
+        alpha_nm = 0.89
+        
+        alpha_bt = 0.87
+        alpha_d = 0.75
+        
+        cv2.addWeighted(bg_border, alpha_border, og, 0, 0.0, bg_border);
+        cv2.addWeighted(bg_nm, alpha_nm, og, 0, 0.0, bg_nm);
+        cv2.addWeighted(bg_bt, alpha_bt, og, 0, 0.0, bg_bt);
+        cv2.addWeighted(bg_dk, alpha_d, og, 0, 0.0, bg_dk);
+        
+        bg_bb = cv2.max(bg_bt, bg_dk)
+        bg_bd = cv2.max(bg_border, bg_nm)
+        bg_all = cv2.max(bg_bb, bg_bd)
+        
+        final = cv2.max(og, bg_all)
+        return final
+
+
+# In[321]:
+
+
+def cloth_texture_2(frame):
+        bg = cv2.imread(PATH_BG_2)
+        
+        green_dk_low = np.array([0, 115, 70], np.uint8)
+        green_dk_upp = np.array([80, 255, 150], np.uint8)
+        green_nm_low = np.array([0, 115, 150], np.uint8)
+        green_nm_upp = np.array([80, 255, 200], np.uint8)
+        green_bt_low = np.array([0, 115, 200], np.uint8)
+        green_bt_upp = np.array([80, 255, 255], np.uint8)
+
+        hsv = convert_bgr_to_hsv(frame)
+        mask_dk = threshold_frame(hsv, green_dk_low, green_dk_upp)
+        mask_nm = threshold_frame(hsv, green_nm_low, green_nm_upp)
+        mask_bt = threshold_frame(hsv, green_bt_low, green_bt_upp)
+        
+        mask = or_frames(or_frames(mask_bt, mask_nm), mask_dk)
+        
+        kernel_ones = np.ones((3,3),np.uint8)
+        kernel_gauss = cv2.getGaussianKernel(5, 3)
+        
+        mask_dil = cv2.erode(mask, kernel_ones, iterations = 1)
+        mask_dil = cv2.dilate(mask_dil, kernel_ones, iterations = 5)
+        mask_dil = cv2.dilate(mask_dil, kernel_gauss, iterations = 5)
+        mask_border = cv2.bitwise_and(invert_frame(mask), mask_dil)
+        mask_border = cv2.GaussianBlur(mask_border, (5,5), 0)
+        mask_inv = invert_frame(mask_dil)
+        
+        og = mask_frame(frame, mask_inv)
+        
+        # Get "see-through" background
+        bg_bt = mask_frame(bg, mask_bt)
+        bg_nm = mask_frame(bg, mask_nm)
+        bg_dk = mask_frame(bg, mask_dk)
+        bg_border = mask_frame(bg, mask_border)
+        
+        background = mask_frame(bg, mask)
+        
+        alpha_border = 0.9
+        alpha_nm = 0.89
+        
+        alpha_bt = 0.87
+        alpha_d = 0.75
+        
+        cv2.addWeighted(bg_border, alpha_border, og, 0, 0.0, bg_border);
+        cv2.addWeighted(bg_nm, alpha_nm, og, 0, 0.0, bg_nm);
+        cv2.addWeighted(bg_bt, alpha_bt, og, 0, 0.0, bg_bt);
+        cv2.addWeighted(bg_dk, alpha_d, og, 0, 0.0, bg_dk);
+        
+        bg_bb = cv2.max(bg_bt, bg_dk)
+        bg_bd = cv2.max(bg_border, bg_nm)
+        bg_all = cv2.max(bg_bb, bg_bd)
+        
+        final = cv2.max(og, bg_all)
+        return final
+
+
+# In[330]:
+
 
 cap = open_video()
-out = create_video_writer(cap)
+
+if is_save_video:
+    out = create_video_writer(cap)
+
+skip_to_frame(cap, 0)
 
 # Read until video is completed
 while(cap.isOpened()):
     # Capture frame-by-frame
     ret, frame = cap.read()
     if ret == True:
-        
-        hsv = convert_bgr_to_hsv(frame)
-        
-        # Threshold the HSV image to get only needed colours
-        mask_brightest = threshold_frame(hsv, green_brightest_low, green_brightest_upp)
-        mask_bright = threshold_frame(hsv, green_bright_low, green_bright_upp)
-        mask_dark = threshold_frame(hsv, green_dark_low, green_dark_upp)
-        mask_darkest = threshold_frame(hsv, green_darkest_low, green_darkest_upp)
-        mask = or_frames(or_frames(mask_brightest, mask_bright), or_frames(mask_darkest, mask_dark))
-        
-        # Smooth Mask(?)
-        kernel = np.ones((5,5),np.uint8)
-        # Erode once first to remove some noise
-        e1 = cv2.erode(mask, kernel, iterations = 1)
-        # DILATE THE HOLES
-        mask = cv2.dilate(e1, kernel, iterations = 2)
-        
-        mask_inv = invert_frame(mask)
-        
-        # Hide cloth
-        res = mask_frame(frame, mask_inv)
-        
-        # Get "see-through" background
-        background = mask_frame(bg, mask)
-        
-        # Bitwise-OR edited frame and background
-        final = or_frames(res, background)
-
+        final = process_frame(cap.get(cv2.CAP_PROP_POS_FRAMES), frame)
+    
         # Display the resulting frames
         if is_show_scenes:
+            cv2.namedWindow('Original', cv2.WINDOW_NORMAL)
+            cv2.resizeWindow('Original', 640, 360)
             cv2.imshow('Original', frame)
-            cv2.imshow('Mask', mask)
-            #cv2.imshow('BG', background)
-            cv2.imshow('Res', res)
+            
+            cv2.namedWindow('Final', cv2.WINDOW_NORMAL)
+            cv2.resizeWindow('Final', 640, 360)
             cv2.imshow('Final', final)
  
         if is_save_video:
@@ -172,14 +377,13 @@ while(cap.isOpened()):
         break
 
 cap.release()
-out.release()
+if is_save_video:
+    out.release()
 cv2.destroyAllWindows()
 
 
-# for i in frames:
-#     get_single_frame(cap, "./Frames/m" + str(i) + ".jpg", i)
-
-# In[ ]:
+# In[264]:
 
 
+cv2.destroyAllWindows()
 
