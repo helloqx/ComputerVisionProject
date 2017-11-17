@@ -69,8 +69,8 @@ def lucas_kanade(old_frame, new_frame, corners, lk_params, use_opencv=False):
     # 0 -> original
     # 1 -> original / 2
     # 2... etc etc
-    old_frame_levels = [old_frame]
-    new_frame_levels = [new_frame]
+    old_frame_levels = [old_gray]
+    new_frame_levels = [new_gray]
 
     for i in range(LEVELS):
         old_frame_levels.append(downsize_frame(old_frame_levels[i]))
