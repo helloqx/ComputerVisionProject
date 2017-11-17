@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
+import time
 import cv2
 import numpy as np
 
-from cal_optical_flow import calc_optical_flow_pyr_lk
+from pyramid import pyra_down
+from single_point_lk import calc_optical_flow_pyr_lk_single
 from corners_tracking import get_good_features
-from utils import to_grayscale, DEBUG, show_images
+from utils import *
 
 DISCARD_CRAPPY_CORNERS = False
-LINE_MAGNITUDE = 15
+D_THRESHOLD = 5e-2
 
 
 def main():
@@ -32,39 +34,57 @@ def main():
     new_frame = cv2.GaussianBlur(new_frame, (13, 13), 9)
 
     # 2. Detect corners
-    tracked_corners = get_good_features(to_grayscale(old_frame), **feature_params)
+    corners = get_good_features(to_grayscale(old_frame), **feature_params)
+    if DEBUG:
+        corner_detection_result = mark_corners(old_frame, corners)
+        show_images({'Corner detection result': corner_detection_result})
 
     # 3. Use optical flow detector (Lucas-Kanade)
-    result, new_corners = lkt(old_frame, new_frame, tracked_corners, lk_params)
-    if DEBUG:
-        show_images({'LK': result})
+    tracked_corners, st = lucas_kanade(old_frame, new_frame, corners, lk_params)
+
+    # st?
+    good_old = corners
+    good_new = tracked_corners
+    lk_result = mark_motions(new_frame, good_old, good_new)
+    show_images({'Lucas Kanade result': lk_result})
+
+    if DISCARD_CRAPPY_CORNERS:  # for video frames. Can I delete this?
+        tracked_corners = good_new
 
 
-def lkt(old_frame, new_frame, corners, lk_params):
+def lucas_kanade(old_frame, new_frame, corners, lk_params, use_opencv=False):
+    if use_opencv:
+        return cv2.calcOpticalFlowPyrLK(old_frame, new_frame, corners, None, **lk_params)
+
     old_gray = to_grayscale(old_frame)
     new_gray = to_grayscale(new_frame)
 
-    new_corners, st, err = calc_optical_flow_pyr_lk(old_gray, new_gray, corners, lk_params, use_original=False)
+    print('Phase 3: Lucas Kanade Tomasi')
+    phase3_start = time.time()
 
-    good_old = corners
-    good_new = new_corners
+    new_corners = np.zeros_like(corners)
+    st = np.ones_like(corners)  # taking all to be successful
 
-    for old, new in zip(good_old, good_new):
-        old_x, old_y = old.ravel()
-        new_x, new_y = new.ravel()
+    # levels to array index mapping
+    # 0 -> original
+    # 1 -> original / 2
+    # 2... etc etc
+    old_frame_levels = [old_frame]
+    new_frame_levels = [new_frame]
 
-        extended_old_x = int(np.rint(old_x - (new_x - old_x) * LINE_MAGNITUDE))
-        extended_old_y = int(np.rint(old_y - (new_y - old_y) * LINE_MAGNITUDE))
+    for i in range(LEVELS):
+        old_frame_levels.append(pyra_down(old_frame_levels[i]))
+        new_frame_levels.append(pyra_down(new_frame_levels[i]))
 
-        new_x = int(np.rint(new_x))
-        new_y = int(np.rint(new_y))
-        cv2.line(new_frame, (old_x, old_y), (extended_old_x, extended_old_y), (0, 0, 255), 2)
-        cv2.circle(new_frame, (old_x, old_y), 3, (0, 0, 0), -1)
+    for idx, corner in enumerate(corners):
+        res = calc_optical_flow_pyr_lk_single(old_frame_levels, new_frame_levels, corner)
 
-    if DISCARD_CRAPPY_CORNERS:
-        new_corners = good_new
+        new_corners[idx] = res
 
-    return new_frame, new_corners
+    # TODO: st should be filtering out corners without movement
+    print('Phase 3: Lucas Kanade Tomasi, Ended in ' + str(time.time() - phase3_start) + ' seconds')
+
+    return new_corners, st
 
 
 if __name__ == '__main__':
