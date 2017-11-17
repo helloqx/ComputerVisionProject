@@ -4,7 +4,7 @@ from utils import get_centered_window, WIN_SIZE, LEVELS
 LK_REPEATS = 10
 
 
-def do_lk(old_frame, new_frame, corner, predicted_corner):
+def get_d(old_frame, new_frame, corner, predicted_corner):
     """LK implementation with manual window selection and double summation
     Uses backwards difference in calculation fo i_x, i_y
 
@@ -62,7 +62,7 @@ def do_lk(old_frame, new_frame, corner, predicted_corner):
         return 0
 
 
-def calc_optical_flow_pyr_lk_single(old_frame_levels, new_frame_levels, corner):
+def get_new_corner(old_frame_levels, new_frame_levels, corner):
     """Does LKT on the single corner with pyramid
 
     This algorithm starts off at the deepest depth and at each depth, repeats lk for
@@ -90,7 +90,7 @@ def calc_optical_flow_pyr_lk_single(old_frame_levels, new_frame_levels, corner):
     for cur_level in range(LEVELS, -1, -1):
         d *= 2  # double the d from the previous d
         for i in range(LK_REPEATS):
-            new_d = do_lk(
+            new_d = get_d(
                 old_frame_levels[cur_level],
                 new_frame_levels[cur_level],
                 corner_val_at_levels[cur_level],

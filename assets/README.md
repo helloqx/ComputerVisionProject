@@ -50,6 +50,13 @@ Size: (3576, 2480)
 The effect of this image relative to checkerboard_1.jpg is that the object
 moved 2 pixels up
 
+## checkerboard_8.jpg
+Top-left corner: (372, 428)
+Size: (3576, 2480)
+The effect of this image relative to checkerboard_1.jpg is that the object
+moved 15 pixels left and up
+
+
 ## Mountain
 All the other input*.jpg are derived from input.jpg
 
@@ -60,17 +67,17 @@ Size: (2419, 1854)
 ### input2.jpg
 Top-left corner: (1610, 443)
 Size: (2419, 1854)
-4x4px off from input1.jpg
+4x3px off from input1.jpg
 
 ### input3.jpg
 Top-left corner: (1614, 446)
 Size: (2419, 1854)
-4x4px off from input2.jpg
+4x3px off from input2.jpg
 
 ### input4.jpg
 Top-left corner: (1618, 449)
 Size: (2419, 1854)
-4x4px off from input3.jpg
+4x3px off from input3.jpg
 
 ### input5.jpg
 Top-left corner: (1607, 441)

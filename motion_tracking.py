@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 from pyramid import downsize_frame
-from single_point_lk import calc_optical_flow_pyr_lk_single
+from single_point_lk import get_new_corner
 from corners_tracking import get_good_features
 from utils import *
 
@@ -28,7 +28,7 @@ def main():
     old_frame = cv2.imread('assets/input1.jpg')
     new_frame = cv2.imread('assets/input2.jpg')
     # old_frame = cv2.imread('assets/checkerboard_1.jpg')
-    # new_frame = cv2.imread('assets/checkerboard_2.jpg')
+    # new_frame = cv2.imread('assets/checkerboard_8.jpg')
 
     old_frame = cv2.GaussianBlur(old_frame, (13, 13), 9)
     new_frame = cv2.GaussianBlur(new_frame, (13, 13), 9)
@@ -77,8 +77,7 @@ def lucas_kanade(old_frame, new_frame, corners, lk_params, use_opencv=False):
         new_frame_levels.append(downsize_frame(new_frame_levels[i]))
 
     for idx, corner in enumerate(corners):
-        res = calc_optical_flow_pyr_lk_single(old_frame_levels, new_frame_levels, corner)
-
+        res = get_new_corner(old_frame_levels, new_frame_levels, corner)
         new_corners[idx] = res
 
     # TODO: st should be filtering out corners without movement

@@ -3,7 +3,7 @@ import numpy as np
 
 EPSILON = 0.15
 DEBUG = False
-LEVELS = 4
+LEVELS = 6
 WIN_SIZE = 13  # used by single_point_lk
 KEYS = {
     'esc': 27
@@ -53,7 +53,7 @@ def mark_motions(frame, old_corners, new_corners):
 
         new_x = int(np.rint(new_x))
         new_y = int(np.rint(new_y))
-        cv2.line(frame_copy, (new_x, new_y), (extended_old_x, extended_old_y), (0, 0, 255), 2)
+        cv2.line(frame_copy, (new_x, new_y), (old_x, old_y), (0, 0, 255), 2)
         cv2.circle(frame_copy, (new_x, new_y), 3, (0, 0, 0), -1)
 
     return frame_copy
@@ -120,11 +120,10 @@ def show_images(image_dict, normalized=False):
 
 def get_centered_window(frame, x, y, win_size):
     # assumes that pixels out of frame are all 0
-
-    delta = (win_size - 1) >> 1
+    delta = (win_size - 1) // 2
 
     # TODO: Need to check for edge on the right/down most
     if x < delta or y < delta:
         raise Exception('X, Y is near edge; Window not full')
-    window = frame[x - delta:x + delta][:, y - delta: y + delta]
+    window = frame[x - delta:x + delta, y - delta: y + delta]
     return window
