@@ -93,3 +93,25 @@ def get_centered_window(frame, x, y, win_size):
         raise Exception('X, Y is near edge; Window not full')
     window = frame[x - delta:x + delta, y - delta: y + delta]
     return window
+
+
+def read_video_frames(file_name):
+    """
+    NOTE: This function should be deprecated since it's not a good idea to do LK on video
+    """
+    cap = cv2.VideoCapture(file_name)
+    if not cap.isOpened():
+        print("Error opening video stream or file")
+
+    vid_frames = []
+    while(cap.isOpened()):
+        ret, v_frame = cap.read()
+
+        if not ret:
+            # reached end of frame
+            break
+        vid_frames.append(v_frame)
+
+    total_frames = len(vid_frames)
+    print('Read %s frames' % total_frames)
+    return total_frames, vid_frames
