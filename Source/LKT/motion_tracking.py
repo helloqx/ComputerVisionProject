@@ -56,26 +56,26 @@ def main():
         # 4. Show the result
         # cv2.namedWindow('Result', cv2.WINDOW_NORMAL)
         # cv2.resizeWindow('Result', 1600, 1200)
-        # cv2.destroyAllWindows()
-        # cv2.imshow('Result %s' % frame_index, result)
+        cv2.destroyAllWindows()
+        cv2.imshow('Result %s' % frame_index, lk_result)
 
         # handling key presses
-        k = cv2.waitKey(0) & 0x00ff
-        if k == 106:  # j key
-            # goes back one frame and resets corners
-            frame_index = max(0, frame_index - 1)
-            tracked_corners = None
-        if k == 107:  # k key
-            # stay on current frame and resets corners
-            tracked_corners = None
-        if k == 108:  # l key
+        # k = cv2.waitKey(0) & 0x00ff
+        # if k == 106:  # j key
+        #     # goes back one frame and resets corners
+        #     frame_index = max(0, frame_index - 1)
+        #     corners = None
+        # if k == 107:  # k key
+        #     # stay on current frame and resets corners
+        #     corners = None
+        # if k == 108:  # l key
             # move to next frame and reuse corners
-            frame_index = min(total_frames - 2, frame_index + 1)
-            tracked_corners = new_corners
-        if k == 27:  # esc key
-            # close program
-            cv2.destroyAllWindows()
-            break
+        frame_index += 1
+        corners = tracked_corners
+        # if k == 27:  # esc key
+        #     # close program
+        #     cv2.destroyAllWindows()
+        #     break
 
         if DISCARD_CRAPPY_CORNERS:  # for video frames. Can I delete this?
             tracked_corners = good_new
