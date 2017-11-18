@@ -53,7 +53,7 @@ def mark_motions(frame, old_corners, new_corners, extend_line=False):
 
         new_x = int(np.rint(new_x))
         new_y = int(np.rint(new_y))
-        cv2.line(frame_copy, (new_x, new_y), (extended_old_x, extended_old_y), (0, 0, 255), 2)
+        # cv2.line(frame_copy, (new_x, new_y), (extended_old_x, extended_old_y), (0, 0, 255), 2)
         cv2.circle(frame_copy, (new_x, new_y), 3, (0, 0, 0), -1)
 
     return frame_copy
@@ -112,6 +112,7 @@ def read_video_frames(file_name):
             break
         vid_frames.append(v_frame)
 
+    cap.release()
     total_frames = len(vid_frames)
     print('Read %s frames' % total_frames)
     return total_frames, vid_frames

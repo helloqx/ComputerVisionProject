@@ -7,11 +7,11 @@ from utils import get_all_eigmin
 
 def get_good_features(frame, **kwargs):
 
-    print('Phase 2: Tomasi')
+    # print('Phase 2: Tomasi')
     phase2_start = time.time()
 
     corners = detect_corners_tomasi(frame, kwargs['maxCorners'], kwargs['minDistance'], kwargs.get('winSize', 13))
-    print('Phase 2: Tomasi, Ended in ' + str(time.time() - phase2_start) + ' seconds')
+    # print('Phase 2: Tomasi, Ended in ' + str(time.time() - phase2_start) + ' seconds')
 
     return corners.astype(np.float32)
 
@@ -42,13 +42,13 @@ def detect_corners_tomasi(frame, max_corners, min_distance, window_size):
     w_xy = signal.convolve2d(i_xy, gkern2d, mode='same')
     w_yy = signal.convolve2d(i_yy, gkern2d, mode='same')
 
-    print('\tGonna start getting the eigmins now...')
+    # print('\tGonna start getting the eigmins now...')
     eig_start = time.time()
 
     eig_mins = get_all_eigmin(w_xx, w_xy, w_yy)
-    print('\tFinished getting the eigmins in ' + str(time.time() - eig_start) + ' seconds')
+    # print('\tFinished getting the eigmins in ' + str(time.time() - eig_start) + ' seconds')
 
-    print('\tGonna start the mosaicing now...')
+    # print('\tGonna start the mosaicing now...')
     mosaic_start = time.time()
     max_eig_mins = np.zeros(eig_mins.shape)
     for i in range(0, nrows - 1, min_distance):
@@ -60,7 +60,7 @@ def detect_corners_tomasi(frame, max_corners, min_distance, window_size):
             window = eig_mins[i:i_end, j:j_end]
             r, c = np.unravel_index(window.argmax(), window.shape)
             max_eig_mins[i + r][j + c] = window[r][c]
-    print('\tFinished mosaicing in ' + str(time.time() - mosaic_start) + ' seconds')
+    # print('\tFinished mosaicing in ' + str(time.time() - mosaic_start) + ' seconds')
 
     cutoff_eig_min = np.partition(max_eig_mins.flatten(), -max_corners)[-max_corners]
 

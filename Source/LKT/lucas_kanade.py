@@ -15,7 +15,7 @@ def lucas_kanade(old_frame, new_frame, corners, lk_params, use_opencv=False):
     old_gray = to_grayscale(old_frame)
     new_gray = to_grayscale(new_frame)
 
-    print('Phase 3: Lucas Kanade Tomasi')
+    # print('Phase 3: Lucas Kanade Tomasi')
     phase3_start = time.time()
 
     new_corners = np.zeros_like(corners)
@@ -36,7 +36,7 @@ def lucas_kanade(old_frame, new_frame, corners, lk_params, use_opencv=False):
         res = get_new_corner(old_frame_levels, new_frame_levels, corner)
         new_corners[idx] = res
 
-    print('Phase 3: Lucas Kanade Tomasi, Ended in ' + str(time.time() - phase3_start) + ' seconds')
+    # print('Phase 3: Lucas Kanade Tomasi, Ended in ' + str(time.time() - phase3_start) + ' seconds')
 
     return new_corners, st
 

@@ -26,26 +26,30 @@ def main():
     # new_frame = cv2.imread('assets/input3.jpg')
     # old_frame = cv2.imread('assets/checkerboard_1.jpg')
     # new_frame = cv2.imread('assets/checkerboard_6.jpg')
-    total_frames, vid_frames = read_video_frames('assets/video.mp4')
+    total_frames, vid_frames = read_video_frames('assets/rubbish2.mp4')
 
-    frame_index = 0
-    tracked_corners = None
-    while True:
+    fourcc = cv2.VideoWriter_fourcc(*'H264')
+    out = cv2.VideoWriter('rubbish2.mp4', fourcc, 30, (640, 352), isColor=True)
+
+    frame_index = 80
+    corners = None
+    while frame_index < total_frames-1:
         # 1. Read image
         old_frame = np.copy(vid_frames[frame_index])
         new_frame = np.copy(vid_frames[frame_index + 1])
 
-        old_frame = cv2.GaussianBlur(old_frame, (13, 13), 9)
-        new_frame = cv2.GaussianBlur(new_frame, (13, 13), 9)
+        blurred_old_frame = cv2.GaussianBlur(old_frame, (7, 7), 5)
+        blurred_new_frame = cv2.GaussianBlur(new_frame, (7, 7), 5)
 
         # 2. Detect corners
-        corners = get_good_features(to_grayscale(old_frame), **feature_params)
+        if corners is None:
+            corners = get_good_features(to_grayscale(blurred_old_frame), **feature_params)
         if DEBUG:
-            corner_detection_result = mark_corners(old_frame, corners)
+            corner_detection_result = mark_corners(blurred_old_frame, corners)
             show_images({'Corner detection result': corner_detection_result})
 
         # 3. Use optical flow detector (Lucas-Kanade)
-        tracked_corners, st = lucas_kanade(old_frame, new_frame, corners, lk_params)
+        tracked_corners, st = lucas_kanade(blurred_old_frame, blurred_new_frame, corners, lk_params)
 
         good_old = corners
         good_new = tracked_corners
@@ -56,8 +60,8 @@ def main():
         # 4. Show the result
         # cv2.namedWindow('Result', cv2.WINDOW_NORMAL)
         # cv2.resizeWindow('Result', 1600, 1200)
-        cv2.destroyAllWindows()
-        cv2.imshow('Result %s' % frame_index, lk_result)
+        # cv2.destroyAllWindows()
+        # cv2.imshow('Result %s' % frame_index, lk_result)
 
         # handling key presses
         # k = cv2.waitKey(0) & 0x00ff
@@ -70,6 +74,8 @@ def main():
         #     corners = None
         # if k == 108:  # l key
             # move to next frame and reuse corners
+        # Define the codec and create VideoWriter object
+        out.write(lk_result)
         frame_index += 1
         corners = tracked_corners
         # if k == 27:  # esc key
@@ -78,7 +84,9 @@ def main():
         #     break
 
         if DISCARD_CRAPPY_CORNERS:  # for video frames. Can I delete this?
-            tracked_corners = good_new
+            corners = good_new
+
+    out.release()
 
 if __name__ == '__main__':
     main()
